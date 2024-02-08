@@ -96,6 +96,7 @@ function eliminar(tabla, id) {
 }
 
 module.exports = {
+    conexion,
     obtenerTodos,
     obtenerPorId,
     agregar,
