@@ -71,11 +71,17 @@ function actualizar(tabla, id, newData) {
     return new Promise((resolve, reject) => {
         conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], (error, result) => {
             if (error) {
-                console.error('Error al actualizar:', error);
+                // console.error('Error al actualizar:', error);
                 return reject(error);
             }
-            console.log('Actualización exitosa:', result);
-            resolve(result);
+
+            if (result.affectedRows > 0) {
+                // console.log('Actualización exitosa:', result);
+                resolve(result);
+            } else {
+                // console.error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
+                reject(new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`));
+            }
         });
     });
 }
@@ -86,11 +92,17 @@ function eliminar(tabla, id) {
     return new Promise((resolve, reject) => {
         conexion.query(`DELETE FROM ${tabla} WHERE ${idColumn} = ?`, id, (error, result) => {
             if (error) {
-                console.error('Error en la consulta DELETE:', error);
+                // console.error('Error en la consulta DELETE:', error);
                 return reject(error);
             }
-            console.log('Eliminación exitosa:', result);
-            resolve(result);
+
+            if (result.affectedRows > 0) {
+                // console.log('Eliminación exitosa:', result);
+                resolve(result);
+            } else {
+                // console.error(`No se encontró ninguna fila para eliminar con ${idColumn}=${id}`);
+                reject(new Error(`No se encontró ninguna fila para eliminar con ${idColumn}=${id}`));
+            }
         });
     });
 }
