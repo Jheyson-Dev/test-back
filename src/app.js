@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan')
+const cors = require('cors');
 const config = require('./config');
 
 const authRoutes = require('./module/auth/routes');
@@ -32,7 +33,9 @@ const detallePedido = require('./module/detallePedido/routes');
 const errors = require('./red/errors');
 
 const app = express();
+
 //middleware
+app.use(cors());  
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
