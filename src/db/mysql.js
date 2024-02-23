@@ -123,9 +123,9 @@ async function obtenerDatosParaAdmin() {
       po.nombre AS nombre_pais_origen,
       COALESCE(i.stock, 0) AS stock,
       COALESCE(t.nombre, '') AS nombre,
+      COALESCE(o.descuento, 0) AS descuento,
       p.precio,
-      COALESCE(im.url, '') AS url,
-      COALESCE(o.descuento, 0) AS descuento
+      COALESCE(im.url, '') AS url
     FROM
       producto p
       LEFT JOIN modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
@@ -199,9 +199,9 @@ async function buscarDatosParaAdmin(query) {
             po.nombre AS nombre_pais_origen,
             COALESCE(i.stock, 0) AS stock,
             COALESCE(t.nombre, '') AS nombre,
+            COALESCE(o.descuento, 0) AS descuento,
             p.precio,
-            COALESCE(im.url, '') AS url,
-            COALESCE(o.descuento, 0) AS descuento
+            COALESCE(im.url, '') AS url 
         FROM
             producto p
             LEFT JOIN modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
@@ -308,6 +308,30 @@ async function obtenerReemplazosProducto(id) {
     });
 }
 
+async function obtenerAplicacionesProducto(id) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT
+                ma.nombre AS nombre_marca_auto,
+                mo.nombre AS nombre_modelo_auto,
+                mo.anio_inicio,
+                mo.anio_termino
+            FROM
+                aplicacion app
+                INNER JOIN modelo_auto mo ON app.id_modelo_auto = mo.id_modelo_auto
+                INNER JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            WHERE
+                app.id_producto = ?
+            ORDER BY
+                ma.nombre ASC, mo.nombre ASC;`;
+            
+        conexion.query(query, [id], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
 
 module.exports = {
     conexion,
@@ -320,5 +344,6 @@ module.exports = {
     buscarDatosParaAdmin,
     obtenerDatosParaWorker,
     buscarDatosParaWorker,
-    obtenerReemplazosProducto
+    obtenerReemplazosProducto,
+    obtenerAplicacionesProducto
 }
