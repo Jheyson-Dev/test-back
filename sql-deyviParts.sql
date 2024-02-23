@@ -129,6 +129,7 @@ CREATE TABLE reemplazo (
                 id_producto INT NOT NULL,
                 cod_reemplazo VARCHAR(100) NOT NULL,
                 producto_reemplazo INT NOT NULL,
+                variacion DOUBLE PRECISION NOT NULL,
                 PRIMARY KEY (id_reemplazo)
 );
 
