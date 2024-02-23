@@ -343,7 +343,7 @@ async function obtenerMedidaPopularPorCategoria(categoria) {
                 JOIN medida m ON p.id_medida = m.id_medida
                 JOIN categoria c ON p.id_categoria = c.id_categoria
             WHERE
-                c.nombre = ?
+                c.id_categoria = ?
             GROUP BY
                 m.nombre
             ORDER BY
@@ -368,8 +368,8 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
                 ma.nombre AS nombre_marca_auto,
                 p.codigo_interno,
                 p.precio,
-                SUM(i.stock) AS total_stock
-                
+                SUM(i.stock) AS total_stock,
+                m.medida
             FROM
                 producto p
                 JOIN categoria c ON p.id_categoria = c.id_categoria
@@ -378,7 +378,7 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
                 LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
                 LEFT JOIN modelo_auto ma ON p.id_modelo_auto = ma.id_modelo_auto
             WHERE
-                c.nombre = ?`;
+                c.id_categoria = ?`;
 
         if (medida) {
             query += ` AND m.nombre = ?`;
