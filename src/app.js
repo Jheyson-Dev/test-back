@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require('morgan')
 const cors = require('cors');
 const config = require('./config');
+const dataGeneralRoutes = require('./module/data/dataGeneralRoutes');
 
 const authRoutes = require('./module/auth/routes');
 const usuarios = require('./module/usuario/routes');
@@ -44,6 +45,7 @@ app.use(express.urlencoded({ extended: true}));
 app.set('port', config.app.port);
 
 //rutas
+app.use('/api/datos_general', dataGeneralRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/usuarios', usuarios);
 app.use('/api/personas', personas);

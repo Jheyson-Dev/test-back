@@ -107,11 +107,91 @@ function eliminar(tabla, id) {
     });
 }
 
+
+async function obtenerDatosRelacionados() {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT
+      m.nombre AS nombre_marca_auto,
+      mo.nombre AS nombre_modelo_auto,
+      p.nombre AS nombre_producto,
+      p.codigo_interno,
+      p.codigo_OEM,
+      p.codigo_fabricante,
+      p.descripcion,
+      p.multiplos,
+      po.nombre AS nombre_pais_origen,
+      i.stock,
+      t.nombre AS nombre_tienda,
+      p.precio,
+      im.url
+  FROM
+    producto p
+  JOIN
+    modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
+  JOIN
+    marca_auto m ON mo.id_marca_auto = m.id_marca_auto
+  JOIN
+    pais_origen po ON p.id_pais_origen = po.id_pais_origen
+  JOIN
+    inventario i ON p.id_producto = i.id_producto
+  JOIN
+    tienda t ON i.id_tienda = t.id_tienda
+  JOIN
+    img_producto im ON p.id_producto = im.id_producto;`;
+  
+      conexion.query(query, (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      });
+    });
+}
+  
+async function buscarDatosRelacionados(query) {
+    return new Promise((resolve, reject) => {
+      const searchQuery = `SELECT
+      p.nombre AS nombre_producto,
+      p.descripcion,
+      p.codigo_interno,
+      p.precio,
+      m.nombre AS nombre_marca_auto,
+      mo.nombre AS nombre_modelo_auto,
+      mo.anio_inicio,
+      mo.anio_termino,
+      po.nombre AS nombre_pais_origen,
+      mf.nombre AS nombre_marca_fabricante,
+      i.stock,
+      t.nombre AS nombre_tienda
+  FROM
+      producto p
+  JOIN
+      modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
+  JOIN
+      marca_auto m ON mo.id_marca_auto = m.id_marca_auto
+  JOIN
+      pais_origen po ON p.id_pais_origen = po.id_pais_origen
+  JOIN
+      marca_fabricante mf ON p.id_marca_fabricante = mf.id_marca_fabricante
+  JOIN
+      inventario i ON p.id_producto = i.id_producto
+  JOIN
+      tienda t ON i.id_tienda = t.id_tienda
+  WHERE
+      p.nombre LIKE '%tu_busqueda%';'`;
+  
+      conexion.query(searchQuery, (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      });
+    });
+}
+
 module.exports = {
     conexion,
     obtenerTodos,
     obtenerPorId,
     agregar,
     actualizar,
-    eliminar
+    eliminar,
+    obtenerDatosRelacionados,
+    buscarDatosRelacionados,
 }

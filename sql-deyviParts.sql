@@ -48,11 +48,19 @@ CREATE TABLE marca_auto (
 
 CREATE TABLE modelo_auto (
                 id_modelo_auto INT AUTO_INCREMENT NOT NULL,
+                nombre VARCHAR(254) NOT NULL,
                 codigo VARCHAR(200) NOT NULL,
                 anio_inicio VARCHAR(15) NOT NULL,
                 anio_termino VARCHAR(15) NOT NULL,
                 id_marca_auto INT NOT NULL,
                 PRIMARY KEY (id_modelo_auto)
+);
+
+CREATE TABLE auto (
+                id_auto INT AUTO_INCREMENT NOT NULL,
+                id_modelo_auto INT NOT NULL,
+                placa VARCHAR(20) NOT NULL,
+                PRIMARY KEY (id_auto)
 );
 
 
@@ -65,6 +73,7 @@ CREATE TABLE medida (
 
 
 CREATE TABLE producto (
+				nombre VARCHAR(254) NOT NULL,
                 id_producto INT AUTO_INCREMENT NOT NULL,
                 codigo_OEM VARCHAR(100) NOT NULL,
                 codigo_interno VARCHAR(100) NOT NULL,
@@ -88,6 +97,12 @@ CREATE TABLE img_producto (
                 PRIMARY KEY (id_img_producto)
 );
 
+CREATE TABLE oferta (
+                id_oferta INT AUTO_INCREMENT NOT NULL,
+                id_producto INT NOT NULL,
+                descuento DOUBLE PRECISION NOT NULL,
+                PRIMARY KEY (id_oferta)
+);
 
 CREATE TABLE ingreso_producto (
                 id_ingreso_producto INT AUTO_INCREMENT NOT NULL,
@@ -247,7 +262,7 @@ REFERENCES proveedor (id_proveedor)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
-ALTER TABLE ingreso_productos ADD CONSTRAINT proveedor_ingreso_productos_fk
+ALTER TABLE ingreso_producto ADD CONSTRAINT proveedor_ingreso_producto_fk
 FOREIGN KEY (id_proveedor)
 REFERENCES proveedor (id_proveedor)
 ON DELETE CASCADE
@@ -280,6 +295,12 @@ ON UPDATE CASCADE;
 ALTER TABLE modelo_auto ADD CONSTRAINT marca_auto_modelo_auto_fk
 FOREIGN KEY (id_marca_auto)
 REFERENCES marca_auto (id_marca_auto)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE auto ADD CONSTRAINT modelo_auto_auto_fk
+FOREIGN KEY (id_modelo_auto)
+REFERENCES modelo_auto (id_modelo_auto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
@@ -325,7 +346,7 @@ REFERENCES producto (id_producto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
-ALTER TABLE ingreso_productos ADD CONSTRAINT producto_ingreso_productos_fk
+ALTER TABLE ingreso_producto ADD CONSTRAINT producto_ingreso_producto_fk
 FOREIGN KEY (id_producto)
 REFERENCES producto (id_producto)
 ON DELETE CASCADE
@@ -338,6 +359,12 @@ ON DELETE CASCADE
 ON UPDATE CASCADE;
 
 ALTER TABLE img_producto ADD CONSTRAINT producto_img_producto_fk
+FOREIGN KEY (id_producto)
+REFERENCES producto (id_producto)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE oferta ADD CONSTRAINT producto_oferta_fk
 FOREIGN KEY (id_producto)
 REFERENCES producto (id_producto)
 ON DELETE CASCADE
