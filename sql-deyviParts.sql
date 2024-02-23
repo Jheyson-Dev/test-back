@@ -231,6 +231,7 @@ CREATE TABLE trabajador (
                 id_persona INT NOT NULL,
                 id_caja INT NOT NULL,
                 id_usuario INT NOT NULL,
+                id_tienda INT NOT NULL,
                 PRIMARY KEY (id_trabajador)
 );
 
@@ -440,6 +441,12 @@ ON UPDATE CASCADE;
 ALTER TABLE trabajador ADD CONSTRAINT usuario_trabajador_fk
 FOREIGN KEY (id_usuario)
 REFERENCES usuario (id_usuario)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE trabajador ADD CONSTRAINT tienda_trabajador_fk
+FOREIGN KEY (id_tienda)
+REFERENCES tienda (id_tienda)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
