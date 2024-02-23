@@ -332,6 +332,76 @@ async function obtenerAplicacionesProducto(id) {
     });
 }
 
+async function obtenerMedidaPopularPorCategoria(categoria) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT
+                m.nombre AS medida,
+                COUNT(*) AS cantidad
+            FROM
+                producto p
+                JOIN medida m ON p.id_medida = m.id_medida
+                JOIN categoria c ON p.id_categoria = c.id_categoria
+            WHERE
+                c.nombre = ?
+            GROUP BY
+                m.nombre
+            ORDER BY
+                cantidad DESC
+            LIMIT 1;`;
+
+        conexion.query(query, [categoria], (error, result) => {
+            if (error) return reject(error);
+            resolve(result[0]); // Solo necesitas la primera fila (la medida popular)
+        });
+    });
+}
+
+async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, busqueda) {
+    return new Promise((resolve, reject) => {
+        let query = `
+            SELECT
+                p.nombre AS nombre_producto,
+                p.descripcion,
+                p.codigo_interno,
+                p.precio,
+                m.nombre AS nombre_medida,
+                i.stock
+            FROM
+                producto p
+                JOIN categoria c ON p.id_categoria = c.id_categoria
+                JOIN medida m ON p.id_medida = m.id_medida
+                LEFT JOIN inventario i ON p.id_producto = i.id_producto
+            WHERE
+                c.nombre = ?`;
+
+        if (medida) {
+            query += ` AND m.nombre = ?`;
+        }
+
+        if (busqueda) {
+            query += ` AND m.medida LIKE ?`;
+        }
+
+        query += ` ORDER BY p.nombre ASC;`;
+
+        const params = [categoria];
+
+        if (medida) {
+            params.push(medida);
+        }
+
+        if (busqueda) {
+            const searchParam = `%${busqueda}%`;
+            params.push(searchParam);
+        }
+
+        conexion.query(query, params, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
 
 module.exports = {
     conexion,
@@ -345,5 +415,7 @@ module.exports = {
     obtenerDatosParaWorker,
     buscarDatosParaWorker,
     obtenerReemplazosProducto,
-    obtenerAplicacionesProducto
+    obtenerAplicacionesProducto,
+    obtenerMedidaPopularPorCategoria,
+    obtenerDatosPorCategoriaConMedidaYBusqueda,
 }
