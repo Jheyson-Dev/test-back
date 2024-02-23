@@ -352,7 +352,7 @@ async function obtenerMedidaPopularPorCategoria(categoria) {
 
         conexion.query(query, [categoria], (error, result) => {
             if (error) return reject(error);
-            resolve(result[0]); // Solo necesitas la primera fila (la medida popular)
+            resolve(result[0]);
         });
     });
 }
@@ -361,17 +361,22 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
     return new Promise((resolve, reject) => {
         let query = `
             SELECT
+                p.id_producto,
                 p.nombre AS nombre_producto,
                 p.descripcion,
+                po.nombre AS nombre_pais_origen,
+                ma.nombre AS nombre_marca_auto,
                 p.codigo_interno,
                 p.precio,
-                m.nombre AS nombre_medida,
-                i.stock
+                SUM(i.stock) AS total_stock
+                
             FROM
                 producto p
                 JOIN categoria c ON p.id_categoria = c.id_categoria
                 JOIN medida m ON p.id_medida = m.id_medida
                 LEFT JOIN inventario i ON p.id_producto = i.id_producto
+                LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
+                LEFT JOIN modelo_auto ma ON p.id_modelo_auto = ma.id_modelo_auto
             WHERE
                 c.nombre = ?`;
 
@@ -383,7 +388,9 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
             query += ` AND m.medida LIKE ?`;
         }
 
-        query += ` ORDER BY p.nombre ASC;`;
+        query += ` GROUP BY p.id_producto`;
+
+        query += ` ORDER BY ma.nombre ASC;`;
 
         const params = [categoria];
 
@@ -417,5 +424,5 @@ module.exports = {
     obtenerReemplazosProducto,
     obtenerAplicacionesProducto,
     obtenerMedidaPopularPorCategoria,
-    obtenerDatosPorCategoriaConMedidaYBusqueda,
+    obtenerDatosPorCategoriaConMedidaYBusqueda
 }
