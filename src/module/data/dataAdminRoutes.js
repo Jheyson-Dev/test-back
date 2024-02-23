@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db/mysql');
 
-// Rutas relacionadas con datos
 router.get('/', async (req, res) => {
     console.log('Llegó a la ruta /api/admin_data');
     try {

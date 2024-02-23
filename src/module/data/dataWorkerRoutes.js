@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db/mysql');
 
-// Rutas relacionadas con datos del trabajador
 router.get('/:id', async (req, res) => {
     console.log(`Llegó a la ruta /api/worker_data/${req.params.id}`);
     try {
@@ -14,7 +13,6 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Ruta para búsqueda de datos del trabajador
 router.get('/:id/buscar', async (req, res) => {
     console.log(`Llegó a la ruta /api/worker_data/${req.params.id}/buscar`);
     try {
