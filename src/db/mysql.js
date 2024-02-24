@@ -120,9 +120,9 @@ async function obtenerDatosParaAdmin() {
       p.codigo_fabricante,
       p.descripcion,
       p.multiplos,
-      po.nombre AS nombre_pais_origen,
+      po.nombre AS origen,
       COALESCE(i.stock, 0) AS stock,
-      COALESCE(t.nombre, '') AS nombre,
+      COALESCE(t.nombre, '') AS tienda,
       COALESCE(o.descuento, 0) AS descuento,
       p.precio,
       COALESCE(im.url, '') AS url
@@ -150,14 +150,14 @@ async function obtenerDatosParaWorker(id) {
         const query = `
             SELECT
                 p.id_producto,
-                m.nombre AS nombre_marca_auto,
-                mo.nombre AS nombre_modelo_auto,
+                m.nombre AS marca_auto,
+                mo.nombre AS modelo_auto,
                 mo.anio_inicio,
                 mo.anio_termino,
                 p.nombre AS nombre_producto,
                 p.descripcion,
-                po.nombre AS nombre_pais_origen,
-                mf.nombre AS nombre_marca_fabricante,
+                po.nombre AS origen,
+                mf.nombre AS marca_fabricante,
                 p.codigo_interno,
                 p.precio,
                 COALESCE(i.stock, 0) AS stock,
@@ -188,17 +188,17 @@ async function buscarDatosParaAdmin(query) {
     return new Promise((resolve, reject) => {
         const searchQuery = `SELECT
             p.id_producto,
-            m.nombre AS nombre_marca_auto,
-            mo.nombre AS nombre_modelo_auto,
-            p.nombre AS nombre_producto,
+            m.nombre AS marca_auto,
+            mo.nombre AS modelo_auto,
+            p.nombre AS producto,
             p.codigo_interno,
             p.codigo_OEM,
             p.codigo_fabricante,
             p.descripcion,
             p.multiplos,
-            po.nombre AS nombre_pais_origen,
+            po.nombre AS origen,
             COALESCE(i.stock, 0) AS stock,
-            COALESCE(t.nombre, '') AS nombre,
+            COALESCE(t.nombre, '') AS tienda,
             COALESCE(o.descuento, 0) AS descuento,
             p.precio,
             COALESCE(im.url, '') AS url 
@@ -237,14 +237,14 @@ async function buscarDatosParaWorker(id, query) {
         const searchQuery = `
         SELECT
             p.id_producto,
-            m.nombre AS nombre_marca_auto,
-            mo.nombre AS nombre_modelo_auto,
+            m.nombre AS marca_auto,
+            mo.nombre AS modelo_auto,
             mo.anio_inicio,
             mo.anio_termino,
-            p.nombre AS nombre_producto,
+            p.nombre AS producto,
             p.descripcion,
-            po.nombre AS nombre_pais_origen,
-            mf.nombre AS nombre_marca_fabricante,
+            po.nombre AS origen,
+            mf.nombre AS marca_fabricante,
             p.codigo_interno,
             p.precio,
             COALESCE(i.stock, 0) AS stock,
@@ -286,11 +286,11 @@ async function obtenerReemplazosProducto(id) {
         const query = `
             SELECT
                 r.cod_reemplazo,
-                p.nombre AS nombre_producto_reemplazo,
+                p.nombre AS reemplazo,
                 p.precio AS precio_original,
-                r.variacion * 100 AS variacion_porcentaje,
-                mfn.nombre AS nombre_marca_fabricante,
-                po.nombre AS nombre_pais_origen
+                r.variacion * 100 AS variacion,
+                mfn.nombre AS marca_fabricante,
+                po.nombre AS origen
             FROM
                 reemplazo r
                 INNER JOIN producto p ON r.producto_reemplazo = p.id_producto
@@ -312,8 +312,8 @@ async function obtenerAplicacionesProducto(id) {
     return new Promise((resolve, reject) => {
         const query = `
             SELECT
-                ma.nombre AS nombre_marca_auto,
-                mo.nombre AS nombre_modelo_auto,
+                ma.nombre AS marca_auto,
+                mo.nombre AS modelo_auto,
                 mo.anio_inicio,
                 mo.anio_termino
             FROM
@@ -362,10 +362,10 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
         let query = `
             SELECT
                 p.id_producto,
-                p.nombre AS nombre_producto,
+                p.nombre AS producto,
                 p.descripcion,
-                po.nombre AS nombre_pais_origen,
-                ma.nombre AS nombre_marca_auto,
+                po.nombre AS origen,
+                ma.nombre AS marca_auto,
                 p.codigo_interno,
                 p.precio,
                 SUM(i.stock) AS total_stock,
@@ -419,15 +419,15 @@ async function obtenerProductosPorModeloYCategoria(idModeloAuto, idCategoria) {
         let query = `
             SELECT
                 p.id_producto,
-                ma.anio_inicio AS anio_inicio_modelo,
-                ma.anio_termino AS anio_termino_modelo,
-                p.nombre AS nombre_producto,
+                ma.anio_inicio AS anio_inicio,
+                ma.anio_termino AS anio_termino,
+                p.nombre AS producto,
                 p.descripcion AS descripcion_producto,
-                po.nombre AS nombre_origen,
-                mfn.nombre AS nombre_marca_fabricante,
+                po.nombre AS origen,
+                mfn.nombre AS marca_fabricante,
                 p.codigo_interno,
-                GROUP_CONCAT(DISTINCT CONCAT(ti.nombre, '(', i.stock, ')') ORDER BY ti.nombre ASC) AS nombre_tienda,
-                SUM(i.stock) AS total_stock
+                SUM(i.stock) AS total_stock,
+                GROUP_CONCAT(DISTINCT CONCAT(ti.nombre, '(', i.stock, ')') ORDER BY ti.nombre ASC) AS tienda
             FROM
                 producto p
                 JOIN modelo_auto ma ON p.id_modelo_auto = ma.id_modelo_auto
