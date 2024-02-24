@@ -410,6 +410,50 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
     });
 }
 
+
+async function obtenerProductosPorModeloYCategoria(idModeloAuto, idCategoria) {
+    return new Promise((resolve, reject) => {
+        let query = `
+            SELECT
+                p.id_producto,
+                ma.anio_inicio AS anio_inicio_modelo,
+                ma.anio_termino AS anio_termino_modelo,
+                p.nombre AS nombre_producto,
+                p.descripcion AS descripcion_producto,
+                po.nombre AS nombre_origen,
+                mfn.nombre AS nombre_marca_fabricante,
+                p.codigo_interno,
+                GROUP_CONCAT(DISTINCT CONCAT(ti.nombre, '(', i.stock, ')') ORDER BY ti.nombre ASC) AS nombre_tienda,
+                SUM(i.stock) AS total_stock
+            FROM
+                producto p
+                JOIN modelo_auto ma ON p.id_modelo_auto = ma.id_modelo_auto
+                LEFT JOIN inventario i ON p.id_producto = i.id_producto
+                LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
+                LEFT JOIN marca_fabricante mfn ON p.id_marca_fabricante = mfn.id_marca_fabricante
+                LEFT JOIN tienda ti ON i.id_tienda = ti.id_tienda
+            WHERE
+                p.id_modelo_auto = ?`;
+
+        const params = [idModeloAuto];
+
+        if (idCategoria) {
+            query += ` AND p.id_categoria = ?`;
+            params.push(idCategoria);
+        }
+
+        query += `
+            GROUP BY p.id_producto
+            ORDER BY p.id_producto;`;
+
+        conexion.query(query, params, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+
 module.exports = {
     conexion,
     obtenerTodos,
@@ -424,5 +468,6 @@ module.exports = {
     obtenerReemplazosProducto,
     obtenerAplicacionesProducto,
     obtenerMedidaPopularPorCategoria,
-    obtenerDatosPorCategoriaConMedidaYBusqueda
+    obtenerDatosPorCategoriaConMedidaYBusqueda,
+    obtenerProductosPorModeloYCategoria
 }

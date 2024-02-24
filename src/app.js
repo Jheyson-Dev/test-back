@@ -37,6 +37,7 @@ const dataWorkerRoutes = require('./module/data/dataWorkerRoutes');
 const dataProductRoutes = require('./module/data/dataReplacementRoutes');
 const dataApplicationRoutes = require('./module/data/dataApplicationRoutes');
 const dataMedidaRoutes = require('./module/data/dataMedidaRoutes');
+const dataModeloRoutes = require('./module/data/dataModeloCategoriaRoutes');
 
 const errors = require('./red/errors');
 
@@ -86,6 +87,7 @@ app.use('/api/worker_data', dataWorkerRoutes);
 app.use('/api/product_reemplazo', dataProductRoutes);
 app.use('/api/product_aplicacion', dataApplicationRoutes);
 app.use('/api/medida', dataMedidaRoutes);
+app.use('/api/data_modelo', dataModeloRoutes);
 
 app.use(errors);
 

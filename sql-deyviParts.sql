@@ -42,6 +42,7 @@ CREATE TABLE pais_origen (
 CREATE TABLE marca_auto (
                 id_marca_auto INT AUTO_INCREMENT NOT NULL,
                 nombre VARCHAR(254) NOT NULL,
+                img_url VARCHAR(500) NOT NULL,
                 PRIMARY KEY (id_marca_auto)
 );
 
@@ -52,6 +53,7 @@ CREATE TABLE modelo_auto (
                 codigo VARCHAR(200) NOT NULL,
                 anio_inicio VARCHAR(15) NOT NULL,
                 anio_termino VARCHAR(15) NOT NULL,
+                img_url VARCHAR(500) NOT NULL,
                 id_marca_auto INT NOT NULL,
                 PRIMARY KEY (id_modelo_auto)
 );
