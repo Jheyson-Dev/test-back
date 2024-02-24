@@ -39,6 +39,7 @@ const dataApplicationRoutes = require('./module/data/dataApplicationRoutes');
 const dataMedidaRoutes = require('./module/data/dataMedidaRoutes');
 const dataModeloRoutes = require('./module/data/dataModeloCategoriaRoutes');
 
+
 const errors = require('./red/errors');
 
 const app = express();

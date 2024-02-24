@@ -411,6 +411,9 @@ async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, bus
 }
 
 
+
+
+
 async function obtenerProductosPorModeloYCategoria(idModeloAuto, idCategoria) {
     return new Promise((resolve, reject) => {
         let query = `

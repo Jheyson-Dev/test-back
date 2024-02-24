@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db/mysql');
 
+
 router.get('/:idModeloAuto/:idCategoria?', async (req, res) => {
     const { idModeloAuto, idCategoria } = req.params;
 
@@ -13,5 +14,6 @@ router.get('/:idModeloAuto/:idCategoria?', async (req, res) => {
         return res.status(500).json({ error: true, message: 'Error interno' });
     }
 });
+
 
 module.exports = router;  
