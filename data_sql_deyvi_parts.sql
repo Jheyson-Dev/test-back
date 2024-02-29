@@ -1,5 +1,6 @@
 CREATE DATABASE  IF NOT EXISTS `db_deybiparts` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `db_deybiparts`;
+
 -- MySQL dump 10.13  Distrib 8.0.36, for Win64 (x86_64)
 --
 -- Host: localhost    Database: db_deybiparts
@@ -109,11 +110,11 @@ DROP TABLE IF EXISTS `img_producto`;
 CREATE TABLE `img_producto` (
   `id_img_producto` int NOT NULL AUTO_INCREMENT,
   `id_producto` int NOT NULL,
-  `url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `img_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_img_producto`),
   KEY `producto_img_producto_fk` (`id_producto`),
   CONSTRAINT `producto_img_producto_fk` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -122,7 +123,7 @@ CREATE TABLE `img_producto` (
 
 LOCK TABLES `img_producto` WRITE;
 /*!40000 ALTER TABLE `img_producto` DISABLE KEYS */;
-INSERT INTO `img_producto` VALUES (1,1,'https://b2b.refax.pe:9043/MARCASDEVEHICULOS/imagennodisponible.png');
+INSERT INTO `img_producto` VALUES (1,1,'https://b2b.refax.pe:9043/MARCASDEVEHICULOS/imagennodisponible.png'),(2,2,'https://b2b.refax.pe:9043/FOTOGRAFIAS/P018821/P018821A.jpg');
 /*!40000 ALTER TABLE `img_producto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -150,7 +151,7 @@ CREATE TABLE `ingreso` (
 
 LOCK TABLES `ingreso` WRITE;
 /*!40000 ALTER TABLE `ingreso` DISABLE KEYS */;
-INSERT INTO `ingreso` VALUES (1,2,'2023-12-12 18:30:00',1),(2,4,'2023-12-12 14:30:00',2);
+INSERT INTO `ingreso` VALUES (1,9,'2023-12-12 18:30:00',1),(2,2,'2024-12-12 14:30:00',2);
 /*!40000 ALTER TABLE `ingreso` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -244,7 +245,7 @@ CREATE TABLE `producto` (
 
 LOCK TABLES `producto` WRITE;
 /*!40000 ALTER TABLE `producto` DISABLE KEYS */;
-INSERT INTO `producto` VALUES (1,'232343-3243232-a','9961171','2132-2121-121-21','CHINA','DCROER','00 VOLTS CO AMPERES POLEA OPK','no se que va aqui',106.5,8,'no',0,'155 X 179',1),(2,'232343-3243232-a','0009553','2132-2121-121-21','MULTI-ORIGEN','STP','LARGO 7E.OOMV1 DIAMETRO 80.00MM HILO 20.COMM W818/8 STP 10588','no se que va aqui',106.5,10,'no',0,'14 X 16',2);
+INSERT INTO `producto` VALUES (1,'1221m212-a','9961171','43434343k3-21','CHINA','DCROER','00 VOLTS CO AMPERES POLEA OPK','no se que va aqui',106.5,9,'si',0,'155 X 179',1),(2,'232343-3243232-a','0009553','2132-2121-121-21','MULTI-ORIGEN','STP','LARGO 7E.OOMV1 DIAMETRO 80.00MM HILO 20.COMM W818/8 STP 10588','no se que va aqui',106.5,14,'no',2,'14 X 16',2);
 /*!40000 ALTER TABLE `producto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -301,7 +302,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'trabajador1','$2b$10$ga8Jh5ZQmuDvbG5Qt50SyeYyztZXgOJKSu28YrtTu2ICU/dw1vqMy','trabajador'),(2,'adminDM','$2b$10$oa1qqZnMmJD4lEsIsWH7/.80L5O5r6AqZlK43UDUezDURpt9oVO4.','administrador');
+INSERT INTO `usuario` VALUES (1,'trabajador1','$2b$10$36tdDi41XmAK2m7WiNh.fO1bAoic.O7juYIbz6CUfkTCCtagxeTjC','trabajador'),(2,'adminDM','$2b$10$NYH4NtWja7O7E1DQMjGTT.RuskbgaAhSnqeR2tLIxsY006ST351iu','administrador');
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -314,4 +315,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-02-28 19:55:28
+-- Dump completed on 2024-02-29 14:03:14
