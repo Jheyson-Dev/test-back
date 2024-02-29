@@ -368,7 +368,7 @@ async function obtenerModelosPorMarca() {
         const query = `
         SELECT
             ma.id_marca_auto,
-            mo.id_modelo_auto,
+            COALESCE(mo.id_modelo_auto, '') AS id_modelo_auto,
             COALESCE(ma.nombre, '') AS nombre_marca,
             COUNT(DISTINCT mo.id_modelo_auto) AS cantidad_modelos,
             ma.img_url AS img_url_marca,
