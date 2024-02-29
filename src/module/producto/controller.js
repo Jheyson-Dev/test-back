@@ -24,17 +24,12 @@ module.exports = function (dbInjected) {
         return db.eliminar(tabla, id);
     }
 
-    function getDestacadosByConsulta() {
-        return db.getDestacadosByConsulta(); // Asume que existe un método en tu db que implementa esta lógica
-    }
-
     return{
         getAll,
         getById,
         add,
         update,
-        remove,
-        getDestacadosByConsulta 
+        remove, 
     }
     
 }

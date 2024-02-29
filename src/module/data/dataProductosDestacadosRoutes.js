@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../../db/mysql'); // Asegúrate de que la ruta sea correcta
+const db = require('../../db/mysql');
 
 router.get('/', async (req, res) => {
     try {
-        const productosDestacados = await db.getDestacadosByConsulta(); // Llama a la función desde el objeto controller
+        const productosDestacados = await db.getDestacadosByConsulta();
 
         res.status(200).json({ productos: productosDestacados });
     } catch (error) {
