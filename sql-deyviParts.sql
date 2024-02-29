@@ -57,7 +57,7 @@ CREATE TABLE producto (
 CREATE TABLE img_producto (
                 id_img_producto INT AUTO_INCREMENT NOT NULL,
                 id_producto INT NOT NULL,
-                url VARCHAR(500) NOT NULL,
+                img_url VARCHAR(500) NOT NULL,
                 PRIMARY KEY (id_img_producto)
 );
 
