@@ -397,6 +397,107 @@ async function obtenerModelosPorMarca() {
     });
 }
 
+
+
+
+
+
+async function obtenerProductoPorId(idProducto) {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM producto WHERE id_producto = ?';
+        conexion.query(query, [idProducto], (error, resultado) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultado[0]);
+            }
+        });
+    });
+}
+
+
+async function obtenerCategoriaProducto(idCategoria) {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM categoria WHERE id_categoria = ?';
+        conexion.query(query, [idCategoria], (error, resultado) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultado[0]);
+            }
+        });
+    });
+}
+
+
+async function obtenerReemplazosProducto(idProducto) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                r.*, 
+                p.*, 
+                c.nombre_producto AS nombre 
+            FROM 
+                reemplazo r
+                JOIN producto p ON r.producto_reemplazo = p.id_producto
+                JOIN categoria c ON p.id_categoria = c.id_categoria
+            WHERE 
+                r.id_producto = ?`;
+        conexion.query(query, [idProducto], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+
+async function obtenerImagenesProducto(idProducto) {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM img_producto WHERE id_producto = ?';
+        conexion.query(query, [idProducto], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+async function obtenerAplicacionesProducto(idProducto) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                a.*, 
+                ma.nombre AS nombre_marca_auto, 
+                mo.nombre AS nombre_modelo_auto,
+                mo.anio_inicio,
+                mo.anio_termino
+            FROM 
+                aplicacion a
+                JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            WHERE 
+                a.id_producto = ?`;
+        conexion.query(query, [idProducto], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+
+
+
+
+
+
 module.exports = {
     conexion,
     obtenerTodos,
@@ -412,4 +513,11 @@ module.exports = {
     getIngresoProductos,
     buscarProductosPorCodigo,
     obtenerModelosPorMarca,
+
+
+    obtenerProductoPorId,
+    obtenerCategoriaProducto,
+    obtenerReemplazosProducto,
+    obtenerImagenesProducto,
+    obtenerAplicacionesProducto
 }

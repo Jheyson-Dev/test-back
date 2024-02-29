@@ -20,6 +20,7 @@ const dataOfertas = require('./module/data/dataProductosOfertaRoutes');
 const dataIngresos = require('./module/data/dataProductosIngresadosRoutes');
 const dataBusqueda = require('./module/data/busquedaCodProductosRoutes');
 const dataMM = require('./module/data/dataMarcaModelosRoutes');
+const dataProductos = require('./module/data/dataProductosCompletoRoutes');
 
 
 
@@ -54,6 +55,7 @@ app.use('/api/ofertas', dataOfertas);
 app.use('/api/p_ingresos', dataIngresos);
 app.use('/api/buscar-productos', dataBusqueda);
 app.use('/api/modelos_marca', dataMM);
+app.use('/api/productos_c', dataProductos);
 
 
 
