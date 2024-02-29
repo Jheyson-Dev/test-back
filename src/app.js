@@ -17,6 +17,7 @@ const ingresos = require('./module/ingreso/routes');
 
 const dataDestacados = require('./module/data/dataProductosDestacadosRoutes');
 const dataOfertas = require('./module/data/dataProductosOfertaRoutes');
+const dataIngresos = require('./module/data/dataProductosIngresadosRoutes');
 
 
 const errors = require('./red/errors');
@@ -47,6 +48,7 @@ app.use('/api/ingresos', ingresos);
 
 app.use('/api/destacados', dataDestacados);
 app.use('/api/ofertas', dataOfertas);
+app.use('/api/p_ingresos', dataIngresos);
 
 app.use(errors);
 
