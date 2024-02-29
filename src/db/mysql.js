@@ -219,9 +219,37 @@ async function actualizarNumeroConsulta(idProducto) {
 }
 
 
+const commonPart = `
+    p.id_producto,
+    MAX(p.codigo_OEM) AS codigo_OEM,
+    MAX(p.codigo_interno) AS codigo_interno,
+    MAX(p.codigo_fabricante) AS codigo_fabricante,
+    MAX(p.origen) AS origen,
+    MAX(p.marca_fabricante) AS marca_fabricante,
+    MAX(p.descripcion) AS descripcion,
+    MAX(p.multiplos) AS multiplos,
+    MAX(p.precio) AS precio,
+    MAX(p.stock) AS stock,
+    MAX(p.oferta) AS oferta,
+    MAX(p.numero_consulta) AS numero_consulta,
+    MAX(p.medida) AS medida,
+    MAX(p.id_categoria) AS id_categoria,
+    COALESCE(MAX(ip.img_url), '') AS url_imagen_producto,
+    COALESCE(MAX(ma.img_url), '') AS img_url_marca_auto
+`;
+
+
 function getDestacadosByConsulta() {
     return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM producto ORDER BY numero_consulta DESC';
+        const query = `
+            SELECT
+                ${commonPart}
+            FROM producto p
+            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            LEFT JOIN aplicacion a ON p.id_producto = a.id_producto
+            LEFT JOIN modelo_auto ma ON a.id_modelo_auto = ma.id_modelo_auto
+            GROUP BY p.id_producto
+            ORDER BY MAX(p.numero_consulta) DESC`;
         conexion.query(query, (err, results) => {
             if (err) {
                 reject(err);
@@ -234,12 +262,67 @@ function getDestacadosByConsulta() {
 
 function getOfertas() {
     return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM producto WHERE oferta = "si"';
+        const query = `
+            SELECT
+                ${commonPart}
+            FROM producto p
+            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            LEFT JOIN aplicacion a ON p.id_producto = a.id_producto
+            LEFT JOIN modelo_auto ma ON a.id_modelo_auto = ma.id_modelo_auto
+            WHERE p.oferta = 'si'
+            GROUP BY p.id_producto`;
         conexion.query(query, (err, results) => {
             if (err) {
                 reject(err);
             } else {
                 resolve(results);
+            }
+        });
+    });
+}
+
+
+
+
+async function getIngresoProductos() {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT
+             ${commonPart}
+            FROM
+                producto p
+            JOIN
+                ingreso i ON p.id_producto = i.id_producto
+            LEFT JOIN
+                img_producto ip ON p.id_producto = ip.id_producto
+            JOIN
+                (SELECT id_producto, MAX(fecha_hora) AS ultima_fecha
+                FROM ingreso
+                GROUP BY id_producto) AS ultimos_ingresos
+            ON
+                i.id_producto = ultimos_ingresos.id_producto AND i.fecha_hora = ultimos_ingresos.ultima_fecha
+            JOIN
+                (SELECT id_producto, MAX(id_ingreso) AS ultimo_ingreso
+                FROM ingreso
+                GROUP BY id_producto) AS ultimo_ingreso
+            ON
+                i.id_producto = ultimo_ingreso.id_producto AND i.id_ingreso = ultimo_ingreso.ultimo_ingreso
+            LEFT JOIN
+                aplicacion a ON p.id_producto = a.id_producto
+            LEFT JOIN
+                modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            LEFT JOIN
+                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            GROUP BY
+                p.id_producto
+            ORDER BY
+                i.fecha_hora DESC, i.id_ingreso DESC;`;
+
+        conexion.query(query, (error, result) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(result);
             }
         });
     });
@@ -257,5 +340,6 @@ module.exports = {
     eliminar,
     actualizarNumeroConsulta,
     getDestacadosByConsulta,
-    getOfertas
+    getOfertas,
+    getIngresoProductos
 }
