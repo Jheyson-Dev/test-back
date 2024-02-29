@@ -328,6 +328,67 @@ async function getIngresoProductos() {
     });
 }
 
+async function buscarProductosPorCodigo(busqueda) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT
+                COALESCE(ma.nombre, '') AS nombre_marca_auto,
+                COALESCE(mo.nombre, '') AS nombre_modelo_auto,
+                COALESCE(cat.nombre_producto, '') AS nombre_producto,
+                p.*,
+                COALESCE(ip.img_url, '') AS url_imagen_producto
+            FROM
+                producto p
+                LEFT JOIN categoria cat ON p.id_categoria = cat.id_categoria
+                LEFT JOIN aplicacion a ON p.id_producto = a.id_producto
+                LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                LEFT JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+                LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            WHERE
+                p.codigo_OEM LIKE ?
+                OR p.codigo_interno LIKE ?
+                OR p.codigo_fabricante LIKE ?
+            ORDER BY
+                NULLIF(ma.nombre, '') IS NULL ASC, ma.nombre ASC,
+                NULLIF(mo.nombre, '') IS NULL ASC, mo.nombre ASC;`;
+
+        conexion.query(query, [`%${busqueda}%`, `%${busqueda}%`, `%${busqueda}%`], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+
+async function obtenerModelosPorMarca() {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT
+                COALESCE(ma.nombre, '') AS nombre_marca,
+                COALESCE(mo.nombre, '') AS nombre_modelo,
+                COUNT(p.id_producto) AS cantidad_productos
+            FROM
+                marca_auto ma
+                LEFT JOIN modelo_auto mo ON ma.id_marca_auto = mo.id_marca_auto
+                LEFT JOIN aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
+                LEFT JOIN producto p ON a.id_producto = p.id_producto
+            GROUP BY
+                ma.id_marca_auto, mo.id_modelo_auto
+            ORDER BY
+                ma.nombre ASC, mo.nombre ASC;`;
+
+        conexion.query(query, (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
 
 module.exports = {
     conexion,
@@ -341,5 +402,7 @@ module.exports = {
     actualizarNumeroConsulta,
     getDestacadosByConsulta,
     getOfertas,
-    getIngresoProductos
+    getIngresoProductos,
+    buscarProductosPorCodigo,
+    obtenerModelosPorMarca
 }
