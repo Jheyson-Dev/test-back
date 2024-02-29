@@ -1,6 +1,4 @@
 const express = require('express');
-const seguridad = require('../../middleware/seguridad')
-const registrarAccion = require('../../middleware/auditoria')
 const retorno = require('../../red/return');
 const controller = require('./index');
 
@@ -10,8 +8,8 @@ const router = express.Router();
 router.get('/', getAll);
 router.get('/:id', getById);
 router.post('/', add);
-router.put('/:id', seguridad(), registrarAccion, update); 
-router.delete('/:id', seguridad(), registrarAccion, remove);
+router.put('/:id', update); 
+router.delete('/:id', remove);
 
 
 

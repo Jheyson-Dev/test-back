@@ -34,6 +34,7 @@ function conexionMysql(){
 
 conexionMysql();
 
+
 function obtenerTodos(tabla){
     return new Promise((resolve, reject) => {
         conexion.query(`Select * from ${tabla}`, (error, result) => {
@@ -66,6 +67,28 @@ function agregar(tabla, data) {
     });
 }
 
+function agregarConStock(tabla, data) {
+    conexion.query(`INSERT INTO ${tabla} SET ?`, data, (error, result) => {
+        if (error) {
+            console.error('Error al insertar ingreso:', error);
+            throw error;
+        }
+        const { cantidad, id_producto } = data;
+        conexion.query(
+            `UPDATE producto SET stock = stock + ? WHERE id_producto = ?`,
+            [cantidad, id_producto],
+            (updateError, updateResult) => {
+                if (updateError) {
+                    console.error('Error al actualizar stock del producto:', updateError);
+                    throw updateError;
+                }
+
+                console.log('Inserción de ingreso y actualización de stock exitosas');
+            }
+        );
+    });
+}
+
 function actualizar(tabla, id, newData) {
     const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
     return new Promise((resolve, reject) => {
@@ -86,21 +109,98 @@ function actualizar(tabla, id, newData) {
     });
 }
 
+
+async function actualizarConStock(tabla, id, newData) {
+    const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
+    const [ingresoAnterior] = await obtenerPorId(tabla, id);
+    const cantidadAnterior = ingresoAnterior.cantidad;
+    const nuevaCantidad = newData.cantidad;
+    const diferenciaCantidad = nuevaCantidad - cantidadAnterior;
+    const idProductoAnterior = ingresoAnterior.id_producto;
+    const idProductoNuevo = newData.id_producto;
+    const idProductoCambiado = idProductoAnterior !== idProductoNuevo;
+
+    if (diferenciaCantidad === 0 && idProductoCambiado) {
+        console.log('No se pudo realizar la acción. La cantidad del ingreso no ha cambiado y se ha cambiado el ID del producto.');
+        return;
+    }
+    const esAumento = diferenciaCantidad > 0;
+    const cantidadAbsoluta = Math.abs(diferenciaCantidad);
+    if (cantidadAbsoluta !== 0) {
+        try {
+            if (esAumento) {
+                await sumarStockProducto(ingresoAnterior.id_producto, cantidadAbsoluta);
+            } else {
+                await restarStockProducto(ingresoAnterior.id_producto, cantidadAbsoluta);
+            }
+        } catch (error) {
+            console.error('Error al actualizar el stock del producto:', error);
+            throw error;
+        }
+    }
+
+    conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], async (error, result) => {
+        if (error) {
+            console.error('Error al actualizar:', error);
+            throw error;
+        }
+
+        if (result.affectedRows > 0) {
+            console.log('Actualización de ingreso y stock del producto exitosas');
+        } else {
+            console.error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
+            throw new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
+        }
+    });
+}
+
+async function restarStockProducto(id_producto, cantidad) {
+    return new Promise((resolve, reject) => {
+        conexion.query(
+            `UPDATE producto SET stock = stock - ? WHERE id_producto = ?`,
+            [cantidad, id_producto],
+            (error, result) => {
+                if (error) {
+                    console.error('Error al restar el stock del producto:', error);
+                    reject(error);
+                } else {
+                    console.log('Resta de stock del producto anterior exitosa');
+                    resolve(result);
+                }
+            }
+        );
+    });
+}
+
+async function sumarStockProducto(id_producto, cantidad) {
+    return new Promise((resolve, reject) => {
+        conexion.query(
+            `UPDATE producto SET stock = stock + ? WHERE id_producto = ?`,
+            [cantidad, id_producto],
+            (error, result) => {
+                if (error) {
+                    console.error('Error al actualizar el stock del nuevo producto:', error);
+                    reject(error);
+                } else {
+                    console.log('Suma de stock del nuevo producto exitosa');
+                    resolve(result);
+                }
+            }
+        );
+    });
+}
+
 function eliminar(tabla, id) {
     const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
-    // console.log('Intentando eliminar:', idColumn, id);
     return new Promise((resolve, reject) => {
         conexion.query(`DELETE FROM ${tabla} WHERE ${idColumn} = ?`, id, (error, result) => {
             if (error) {
-                // console.error('Error en la consulta DELETE:', error);
                 return reject(error);
             }
 
             if (result.affectedRows > 0) {
-                // console.log('Eliminación exitosa:', result);
                 resolve(result);
             } else {
-                // console.error(`No se encontró ninguna fila para eliminar con ${idColumn}=${id}`);
                 reject(new Error(`No se encontró ninguna fila para eliminar con ${idColumn}=${id}`));
             }
         });
@@ -108,350 +208,26 @@ function eliminar(tabla, id) {
 }
 
 
-async function obtenerDatosParaAdmin() {
-    return new Promise((resolve, reject) => {
-      const query = `SELECT
-      p.id_producto,
-      m.nombre AS nombre_marca_auto,
-      mo.nombre AS nombre_modelo_auto,
-      p.nombre AS nombre_producto,
-      p.codigo_interno,
-      p.codigo_OEM,
-      p.codigo_fabricante,
-      p.descripcion,
-      p.multiplos,
-      po.nombre AS origen,
-      COALESCE(i.stock, 0) AS stock,
-      COALESCE(t.nombre, '') AS tienda,
-      COALESCE(o.descuento, 0) AS descuento,
-      p.precio,
-      COALESCE(im.url, '') AS url
-    FROM
-      producto p
-      LEFT JOIN modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
-      LEFT JOIN marca_auto m ON mo.id_marca_auto = m.id_marca_auto
-      LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-      LEFT JOIN inventario i ON p.id_producto = i.id_producto
-      LEFT JOIN tienda t ON i.id_tienda = t.id_tienda
-      LEFT JOIN img_producto im ON p.id_producto = im.id_producto
-      LEFT JOIN oferta o ON p.id_producto = o.id_producto
-      ORDER BY
-          m.nombre ASC, mo.nombre ASC;`;
-
-    conexion.query(query, (error, result) => {
-        if (error) return reject(error);
-        resolve(result);
-      });
-    });
-}
-
-async function obtenerDatosParaWorker(id) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                p.id_producto,
-                m.nombre AS marca_auto,
-                mo.nombre AS modelo_auto,
-                mo.anio_inicio,
-                mo.anio_termino,
-                p.nombre AS nombre_producto,
-                p.descripcion,
-                po.nombre AS origen,
-                mf.nombre AS marca_fabricante,
-                p.codigo_interno,
-                p.precio,
-                COALESCE(i.stock, 0) AS stock,
-                COALESCE(im.url, '') AS url,
-                COALESCE(o.descuento, 0) AS descuento
-            FROM
-                producto p
-                LEFT JOIN modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
-                LEFT JOIN marca_auto m ON mo.id_marca_auto = m.id_marca_auto
-                LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-                LEFT JOIN marca_fabricante mf ON p.id_marca_fabricante = mf.id_marca_fabricante
-                LEFT JOIN inventario i ON p.id_producto = i.id_producto
-                LEFT JOIN img_producto im ON p.id_producto = im.id_producto
-                LEFT JOIN oferta o ON p.id_producto = o.id_producto
-            WHERE
-                i.id_tienda = (SELECT id_tienda FROM trabajador WHERE id_trabajador = ? LIMIT 1)
-            ORDER BY
-                m.nombre ASC, mo.nombre ASC;`;
-
-        conexion.query(query, [id], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
-}
-  
-async function buscarDatosParaAdmin(query) {
-    return new Promise((resolve, reject) => {
-        const searchQuery = `SELECT
-            p.id_producto,
-            m.nombre AS marca_auto,
-            mo.nombre AS modelo_auto,
-            p.nombre AS producto,
-            p.codigo_interno,
-            p.codigo_OEM,
-            p.codigo_fabricante,
-            p.descripcion,
-            p.multiplos,
-            po.nombre AS origen,
-            COALESCE(i.stock, 0) AS stock,
-            COALESCE(t.nombre, '') AS tienda,
-            COALESCE(o.descuento, 0) AS descuento,
-            p.precio,
-            COALESCE(im.url, '') AS url 
-        FROM
-            producto p
-            LEFT JOIN modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
-            LEFT JOIN marca_auto m ON mo.id_marca_auto = m.id_marca_auto
-            LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-            LEFT JOIN inventario i ON p.id_producto = i.id_producto
-            LEFT JOIN tienda t ON i.id_tienda = t.id_tienda
-            LEFT JOIN img_producto im ON p.id_producto = im.id_producto
-            LEFT JOIN oferta o ON p.id_producto = o.id_producto
-        WHERE
-            p.nombre LIKE ? OR
-            p.codigo_interno LIKE ? OR
-            p.codigo_OEM LIKE ? OR
-            p.descripcion LIKE ? OR
-            m.nombre LIKE ? OR
-            mo.nombre LIKE ? OR
-            po.nombre LIKE ? OR
-            t.nombre LIKE ?
-        ORDER BY
-            m.nombre ASC, mo.nombre ASC;`;
-
-        const searchValue = `%${query}%`;
-
-        conexion.query(searchQuery, [searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue, searchValue], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
-}
-
-async function buscarDatosParaWorker(id, query) {
-    return new Promise((resolve, reject) => {
-        const searchQuery = `
-        SELECT
-            p.id_producto,
-            m.nombre AS marca_auto,
-            mo.nombre AS modelo_auto,
-            mo.anio_inicio,
-            mo.anio_termino,
-            p.nombre AS producto,
-            p.descripcion,
-            po.nombre AS origen,
-            mf.nombre AS marca_fabricante,
-            p.codigo_interno,
-            p.precio,
-            COALESCE(i.stock, 0) AS stock,
-            COALESCE(im.url, '') AS url,
-            COALESCE(o.descuento, 0) AS descuento
-        FROM
-            producto p
-            LEFT JOIN modelo_auto mo ON p.id_modelo_auto = mo.id_modelo_auto
-            LEFT JOIN marca_auto m ON mo.id_marca_auto = m.id_marca_auto
-            LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-            LEFT JOIN marca_fabricante mf ON p.id_marca_fabricante = mf.id_marca_fabricante
-            LEFT JOIN inventario i ON p.id_producto = i.id_producto
-            LEFT JOIN img_producto im ON p.id_producto = im.id_producto
-            LEFT JOIN oferta o ON p.id_producto = o.id_producto
-        WHERE
-            i.id_tienda = (SELECT id_tienda FROM trabajador WHERE id_trabajador = ? LIMIT 1)
-            AND (
-                p.nombre LIKE ? OR
-                p.codigo_interno LIKE ? OR
-                p.descripcion LIKE ? OR
-                m.nombre LIKE ? OR
-                mo.nombre LIKE ? OR
-                po.nombre LIKE ?
-            )
-        ORDER BY
-            m.nombre ASC, mo.nombre ASC;`;
-
-        const searchParam = `%${query}%`;
-
-        conexion.query(searchQuery, [id, searchParam, searchParam, searchParam, searchParam, searchParam, searchParam], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
-}
-
-async function obtenerReemplazosProducto(id) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                r.cod_reemplazo,
-                p.nombre AS reemplazo,
-                p.precio AS precio_original,
-                r.variacion * 100 AS variacion,
-                mfn.nombre AS marca_fabricante,
-                po.nombre AS origen
-            FROM
-                reemplazo r
-                INNER JOIN producto p ON r.producto_reemplazo = p.id_producto
-                INNER JOIN marca_fabricante mfn ON p.id_marca_fabricante = mfn.id_marca_fabricante
-                INNER JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-            WHERE
-                r.id_producto = ?
-            ORDER BY
-                r.variacion DESC;`;
-
-        conexion.query(query, [id], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
-}
-
-async function obtenerAplicacionesProducto(id) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                ma.nombre AS marca_auto,
-                mo.nombre AS modelo_auto,
-                mo.anio_inicio,
-                mo.anio_termino
-            FROM
-                aplicacion app
-                INNER JOIN modelo_auto mo ON app.id_modelo_auto = mo.id_modelo_auto
-                INNER JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
-            WHERE
-                app.id_producto = ?
-            ORDER BY
-                ma.nombre ASC, mo.nombre ASC;`;
-            
-        conexion.query(query, [id], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
-}
-
-async function obtenerMedidaPopularPorCategoria(categoria) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                m.nombre AS medida,
-                COUNT(*) AS cantidad
-            FROM
-                producto p
-                JOIN medida m ON p.id_medida = m.id_medida
-                JOIN categoria c ON p.id_categoria = c.id_categoria
-            WHERE
-                c.id_categoria = ?
-            GROUP BY
-                m.nombre
-            ORDER BY
-                cantidad DESC
-            LIMIT 1;`;
-
-        conexion.query(query, [categoria], (error, result) => {
-            if (error) return reject(error);
-            resolve(result[0]);
-        });
-    });
-}
-
-async function obtenerDatosPorCategoriaConMedidaYBusqueda(categoria, medida, busqueda) {
-    return new Promise((resolve, reject) => {
-        let query = `
-            SELECT
-                p.id_producto,
-                p.nombre AS producto,
-                p.descripcion,
-                po.nombre AS origen,
-                ma.nombre AS marca_auto,
-                p.codigo_interno,
-                p.precio,
-                SUM(i.stock) AS total_stock,
-                m.medida
-            FROM
-                producto p
-                JOIN categoria c ON p.id_categoria = c.id_categoria
-                JOIN medida m ON p.id_medida = m.id_medida
-                LEFT JOIN inventario i ON p.id_producto = i.id_producto
-                LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-                LEFT JOIN modelo_auto ma ON p.id_modelo_auto = ma.id_modelo_auto
-            WHERE
-                c.id_categoria = ?`;
-
-        if (medida) {
-            query += ` AND m.nombre = ?`;
-        }
-
-        if (busqueda) {
-            query += ` AND m.medida LIKE ?`;
-        }
-
-        query += ` GROUP BY p.id_producto`;
-
-        query += ` ORDER BY ma.nombre ASC;`;
-
-        const params = [categoria];
-
-        if (medida) {
-            params.push(medida);
-        }
-
-        if (busqueda) {
-            const searchParam = `%${busqueda}%`;
-            params.push(searchParam);
-        }
-
-        conexion.query(query, params, (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+async function actualizarNumeroConsulta(idProducto) {
+    try {
+      const query = `UPDATE producto SET numero_consulta = numero_consulta + 1 WHERE id_producto = ?`;
+      const [resultado] = await conexion.promise().execute(query, [idProducto]);
+      return resultado;
+    } catch (error) {
+      throw error;
+    }
 }
 
 
-
-
-
-async function obtenerProductosPorModeloYCategoria(idModeloAuto, idCategoria) {
+function getDestacadosByConsulta() {
     return new Promise((resolve, reject) => {
-        let query = `
-            SELECT
-                p.id_producto,
-                ma.anio_inicio AS anio_inicio,
-                ma.anio_termino AS anio_termino,
-                p.nombre AS producto,
-                p.descripcion AS descripcion_producto,
-                po.nombre AS origen,
-                mfn.nombre AS marca_fabricante,
-                p.codigo_interno,
-                SUM(i.stock) AS total_stock,
-                GROUP_CONCAT(DISTINCT CONCAT(ti.nombre, '(', i.stock, ')') ORDER BY ti.nombre ASC) AS tienda
-            FROM
-                producto p
-                JOIN modelo_auto ma ON p.id_modelo_auto = ma.id_modelo_auto
-                LEFT JOIN inventario i ON p.id_producto = i.id_producto
-                LEFT JOIN pais_origen po ON p.id_pais_origen = po.id_pais_origen
-                LEFT JOIN marca_fabricante mfn ON p.id_marca_fabricante = mfn.id_marca_fabricante
-                LEFT JOIN tienda ti ON i.id_tienda = ti.id_tienda
-            WHERE
-                p.id_modelo_auto = ?`;
-
-        const params = [idModeloAuto];
-
-        if (idCategoria) {
-            query += ` AND p.id_categoria = ?`;
-            params.push(idCategoria);
-        }
-
-        query += `
-            GROUP BY p.id_producto
-            ORDER BY p.id_producto;`;
-
-        conexion.query(query, params, (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
+        const query = 'SELECT * FROM producto ORDER BY numero_consulta DESC';
+        conexion.query(query, (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
         });
     });
 }
@@ -462,15 +238,10 @@ module.exports = {
     obtenerTodos,
     obtenerPorId,
     agregar,
+    agregarConStock,
     actualizar,
+    actualizarConStock,
     eliminar,
-    obtenerDatosParaAdmin,
-    buscarDatosParaAdmin,
-    obtenerDatosParaWorker,
-    buscarDatosParaWorker,
-    obtenerReemplazosProducto,
-    obtenerAplicacionesProducto,
-    obtenerMedidaPopularPorCategoria,
-    obtenerDatosPorCategoriaConMedidaYBusqueda,
-    obtenerProductosPorModeloYCategoria
+    actualizarNumeroConsulta,
+    getDestacadosByConsulta,
 }

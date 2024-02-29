@@ -1,4 +1,4 @@
-const tabla = 'detalle_pedido';
+const tabla = 'ingreso';
 
 module.exports = function (dbInjected) {
 
@@ -15,10 +15,10 @@ module.exports = function (dbInjected) {
         return db.obtenerPorId(tabla, id);
     }
     function add(body) {
-        return db.agregar(tabla, body);
+        return db.agregarConStock(tabla, body);
     }
     function update(id, newData) {
-        return db.actualizar(tabla, id, newData);
+        return db.actualizarConStock(tabla, id, newData);
     }
     function remove(id) {
         return db.eliminar(tabla, id);

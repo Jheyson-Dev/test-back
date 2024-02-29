@@ -1,6 +1,4 @@
 const express = require('express');
-const seguridad = require('../../middleware/seguridad')
-const registrarAccion = require('../../middleware/auditoria');
 const retorno = require('../../red/return');
 const controller = require('./index');
 
@@ -9,9 +7,9 @@ const router = express.Router();
 
 router.get('/', getAll);
 router.get('/:id', getById);
-router.post('/', seguridad(), registrarAccion, add);
-router.put('/:id', seguridad(), registrarAccion, update); 
-router.delete('/:id', seguridad(), registrarAccion, remove);
+router.post('/', add);
+router.put('/:id', update); 
+router.delete('/:id', remove);
 
 
 
@@ -36,10 +34,10 @@ async function getById(req, res){
 
 async function add(req, res, next) {
     try {
-        const nuevoRegistro = req.body;
-        const resultado = await controller.add(nuevoRegistro);
+        const nuevoIngreso = req.body;
+        await controller.add(nuevoIngreso);
         retorno.success(req, res, 'Registro agregado exitosamente', 201);
-    } catch (err) {
+    } catch (error) {
         next(err);
     }
 }
@@ -48,9 +46,9 @@ async function update(req, res, next) {
     try {
         const id = req.params.id;
         const datosActualizados = req.body;
-        const resultado = await controller.update(id, datosActualizados);
-        retorno.success(req, res, 'Registro actualizado exitosamente', 200);
-    } catch (err) {
+        await controller.update(id, datosActualizados);
+        retorno.success(req, res, 'Ingreso actualizado exitosamente', 200);
+    } catch (error) {
         next(err);
     }
 }
