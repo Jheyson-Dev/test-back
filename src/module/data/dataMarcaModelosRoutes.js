@@ -5,19 +5,27 @@ const db = require('../../db/mysql');
 router.get('/', async (req, res) => {
     try {
         const modelosPorMarca = await db.obtenerModelosPorMarca();
-        
-        // Estructurar los datos según lo requerido
         const dataEstructurada = {};
         modelosPorMarca.forEach(modelo => {
-            const nombreMarca = modelo.nombre_marca;
-            const { nombre_modelo, cantidad_productos } = modelo;
+            const { id_marca_auto, id_modelo_auto, nombre_marca, img_url_marca, cantidad_modelos, nombre_modelo, anio_inicio, anio_termino, img_url_modelo, cantidad_productos } = modelo;
             
-            if (!dataEstructurada[nombreMarca]) {
-                dataEstructurada[nombreMarca] = [];
+            if (!dataEstructurada[nombre_marca]) {
+                dataEstructurada[nombre_marca] = {
+                    id_marca_auto,
+                    cantidad_modelos,
+                    img_url_marca,
+                    modelos: []
+                };
+            } else {
+                dataEstructurada[nombre_marca].cantidad_modelos++;
             }
             
-            dataEstructurada[nombreMarca].push({
+            dataEstructurada[nombre_marca].modelos.push({
+                id_modelo_auto,
                 nombre_modelo,
+                anio_inicio: anio_inicio || '',
+                anio_termino: anio_termino || '',
+                img_url_modelo: img_url_modelo || '',
                 cantidad_productos
             });
         });

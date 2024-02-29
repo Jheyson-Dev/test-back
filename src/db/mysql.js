@@ -366,19 +366,26 @@ async function buscarProductosPorCodigo(busqueda) {
 async function obtenerModelosPorMarca() {
     return new Promise((resolve, reject) => {
         const query = `
-            SELECT
-                COALESCE(ma.nombre, '') AS nombre_marca,
-                COALESCE(mo.nombre, '') AS nombre_modelo,
-                COUNT(p.id_producto) AS cantidad_productos
-            FROM
-                marca_auto ma
-                LEFT JOIN modelo_auto mo ON ma.id_marca_auto = mo.id_marca_auto
-                LEFT JOIN aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
-                LEFT JOIN producto p ON a.id_producto = p.id_producto
-            GROUP BY
-                ma.id_marca_auto, mo.id_modelo_auto
-            ORDER BY
-                ma.nombre ASC, mo.nombre ASC;`;
+        SELECT
+            ma.id_marca_auto,
+            mo.id_modelo_auto,
+            COALESCE(ma.nombre, '') AS nombre_marca,
+            COUNT(DISTINCT mo.id_modelo_auto) AS cantidad_modelos,
+            ma.img_url AS img_url_marca,
+            COALESCE(mo.nombre, '') AS nombre_modelo,
+            mo.anio_inicio,
+            mo.anio_termino,
+            mo.img_url AS img_url_modelo,
+            COUNT(p.id_producto) AS cantidad_productos
+        FROM
+            marca_auto ma
+            LEFT JOIN modelo_auto mo ON ma.id_marca_auto = mo.id_marca_auto
+            LEFT JOIN aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
+            LEFT JOIN producto p ON a.id_producto = p.id_producto
+        GROUP BY
+            ma.id_marca_auto, ma.nombre, ma.img_url, mo.id_modelo_auto, mo.nombre, mo.anio_inicio, mo.anio_termino, mo.img_url
+        ORDER BY
+            ma.nombre ASC, mo.nombre ASC;`;
 
         conexion.query(query, (error, resultados) => {
             if (error) {
@@ -404,5 +411,5 @@ module.exports = {
     getOfertas,
     getIngresoProductos,
     buscarProductosPorCodigo,
-    obtenerModelosPorMarca
+    obtenerModelosPorMarca,
 }
