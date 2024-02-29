@@ -232,6 +232,19 @@ function getDestacadosByConsulta() {
     });
 }
 
+function getOfertas() {
+    return new Promise((resolve, reject) => {
+        const query = 'SELECT * FROM producto WHERE oferta = "si"';
+        conexion.query(query, (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
 
 module.exports = {
     conexion,
@@ -244,4 +257,5 @@ module.exports = {
     eliminar,
     actualizarNumeroConsulta,
     getDestacadosByConsulta,
+    getOfertas
 }

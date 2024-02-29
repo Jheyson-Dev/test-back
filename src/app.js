@@ -16,6 +16,7 @@ const reemplazos = require('./module/reemplazo/routes');
 const ingresos = require('./module/ingreso/routes');
 
 const dataDestacados = require('./module/data/dataProductosDestacadosRoutes');
+const dataOfertas = require('./module/data/dataProductosOfertaRoutes');
 
 
 const errors = require('./red/errors');
@@ -45,6 +46,7 @@ app.use('/api/reemplazos', reemplazos);
 app.use('/api/ingresos', ingresos);
 
 app.use('/api/destacados', dataDestacados);
+app.use('/api/ofertas', dataOfertas);
 
 app.use(errors);
 
