@@ -9,7 +9,7 @@ module.exports = function (dbInjected) {
     }
 
     function getAll() {
-        return db.obtenerTodos(tabla);
+        return db.obtenerProductosConCategoria();
     }
     function getById(id) {
         return db.obtenerPorId(tabla, id);

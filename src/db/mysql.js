@@ -496,7 +496,22 @@ async function obtenerAplicacionesProducto(idProducto) {
 
 
 
-
+async function obtenerProductosConCategoria() {
+    const query = `
+        SELECT p.*, c.*
+        FROM producto p
+        INNER JOIN categoria c ON p.id_categoria = c.id_categoria`;
+    
+    return new Promise((resolve, reject) => {
+        conexion.query(query, (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
 
 module.exports = {
     conexion,
@@ -519,5 +534,6 @@ module.exports = {
     obtenerCategoriaProducto,
     obtenerReemplazosProducto,
     obtenerImagenesProducto,
-    obtenerAplicacionesProducto
+    obtenerAplicacionesProducto,
+    obtenerProductosConCategoria
 }

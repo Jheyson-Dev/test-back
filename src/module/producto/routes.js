@@ -14,10 +14,10 @@ router.delete('/:id', remove);
 
 
 async function getAll(req, res){
-    try{
+    try {
         const items = await controller.getAll();
         retorno.success(req, res, items, 200);
-    }catch(err){
+    } catch (err) {
         retorno.error(req, res, err, 500);
     }
 };
