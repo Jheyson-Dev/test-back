@@ -25,7 +25,7 @@ async function getAll(req, res){
 async function getById(req, res){
     try{
         const items = await controller.getById(req.params.id);
-        retorno.success(req, res, items, 200);
+        res.status(200).json(items);
     }catch(err){
         retorno.error(req, res, err, 500);
     }

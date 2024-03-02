@@ -30,8 +30,7 @@ async function getById(req, res){
     } catch (error) {
         console.error('Error al obtener el producto por ID:', error);
         res.status(500).json({ error: true, message: 'Error interno' });
-    }
-    
+    } 
 };
 
 async function add(req, res, next) {

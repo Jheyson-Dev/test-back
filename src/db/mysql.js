@@ -495,13 +495,12 @@ async function obtenerAplicacionesProducto(idProducto) {
 
 
 
-
+const productoConNombre = `SELECT p.*, c.id_categoria,c.nombre_producto
+FROM producto p
+INNER JOIN categoria c ON p.id_categoria = c.id_categoria
+`
 async function obtenerProductosConCategoria() {
-    const query = `
-        SELECT p.*, c.*
-        FROM producto p
-        INNER JOIN categoria c ON p.id_categoria = c.id_categoria`;
-    
+    const query = productoConNombre;
     return new Promise((resolve, reject) => {
         conexion.query(query, (error, resultados) => {
             if (error) {
@@ -515,10 +514,7 @@ async function obtenerProductosConCategoria() {
 
 async function obtenerProductoConCategoriaPorId(idProducto) {
     return new Promise((resolve, reject) => {
-        const query = `
-            SELECT p.*, c.id_categoria,c.nombre_producto
-            FROM producto p
-            INNER JOIN categoria c ON p.id_categoria = c.id_categoria
+        const query = `${productoConNombre}
             WHERE p.id_producto = ?`;
 
             conexion.query(query, [idProducto], (error, resultados) => {
@@ -530,6 +526,136 @@ async function obtenerProductoConCategoriaPorId(idProducto) {
             });
         }
     );
+}
+
+const imagenesCodigoInterno=  `SELECT ip.*, p.id_producto, p.codigo_interno
+FROM img_producto ip
+INNER JOIN producto p ON ip.id_producto = p.id_producto`;
+
+async function obtenerImagenesConCodigoInterno() {
+    const query = imagenesCodigoInterno;    
+    return new Promise((resolve, reject) => {
+        conexion.query(query, (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+async function obtenerImagenesConCInternoPorId(idImg) {
+    return new Promise((resolve, reject) => {
+        const query = `${imagenesCodigoInterno}
+            WHERE ip.id_img_producto = ?`;
+
+        conexion.query(query, [idImg], (error, resultados) => {
+    if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+const reemplazosCodigoInterno = `SELECT r.*, p.codigo_interno AS codigo_interno_original, p2.codigo_interno AS codigo_interno_reemplazo
+FROM reemplazo r
+INNER JOIN producto p ON r.id_producto = p.id_producto
+INNER JOIN producto p2 ON r.producto_reemplazo = p2.id_producto`;
+
+async function obtenerTodosReemplazos() {
+    const query = reemplazosCodigoInterno;    
+    return new Promise((resolve, reject) => {
+        conexion.query(query, (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+async function obtenerReemplazoPorId(idReemplazo) {
+    const query = `${reemplazosCodigoInterno}
+        WHERE r.id_reemplazo = ?`;
+    
+    return new Promise((resolve, reject) => {
+        conexion.query(query, [idReemplazo], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados[0]);
+            }
+        });
+    });
+}
+
+const aplicacionCodigoModelo = `SELECT a.*, p.codigo_interno, m.nombre AS nombre_modelo_auto
+FROM aplicacion a
+INNER JOIN producto p ON a.id_producto = p.id_producto
+INNER JOIN modelo_auto m ON a.id_modelo_auto = m.id_modelo_auto`
+
+async function obtenerTodasAplicaciones() {
+    const query = aplicacionCodigoModelo;
+    
+    return new Promise((resolve, reject) => {
+        conexion.query(query, (error, resultados) => {
+
+    if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+async function obtenerAplicacionPorId(idAplicacion) {
+    const query = `${aplicacionCodigoModelo}
+        WHERE a.id_aplicacion = ?`;
+
+    return new Promise((resolve, reject) => {
+        conexion.query(query, [idAplicacion], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados[0]);
+            }
+        });
+    });
+}
+
+const modelo_marca = `SELECT ma.nombre AS nombre_marca, mo.*
+FROM modelo_auto mo
+INNER JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto`;
+
+async function obtenerModeloAutoConMarca() {
+    const query = modelo_marca;
+    return new Promise((resolve, reject) => {
+        conexion.query(query, (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+async function obtenerModeloAutoPorId(idModeloAuto) {
+    return new Promise((resolve, reject) => {
+        const query = `${modelo_marca}
+            WHERE mo.id_modelo_auto = ?`;
+
+        conexion.query(query, [idModeloAuto], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados[0]);
+            }
+        });
+    });
 }
 
 module.exports = {
@@ -554,6 +680,12 @@ module.exports = {
     obtenerAplicacionesProducto,
     obtenerProductosConCategoria,
     obtenerProductoConCategoriaPorId,
-
-    
+    obtenerImagenesConCodigoInterno,
+    obtenerImagenesConCInternoPorId,
+    obtenerTodosReemplazos,
+    obtenerReemplazoPorId,
+    obtenerTodasAplicaciones,
+    obtenerAplicacionPorId,
+    obtenerModeloAutoConMarca,
+    obtenerModeloAutoPorId    
 }

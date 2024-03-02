@@ -8,11 +8,23 @@ module.exports = function (dbInjected) {
         db = require('../../db/mysql')
     }
 
-    function getAll() {
-        return db.obtenerTodos(tabla);
+    async function getAll() {
+        try {
+            const aplicaciones = await db.obtenerTodasAplicaciones();
+            return aplicaciones;
+        } catch (error) {
+            
+           
+    throw new Error('Error al obtener todas las aplicaciones');
+        }
     }
-    function getById(id) {
-        return db.obtenerPorId(tabla, id);
+    async function getById(id) {
+        try {
+            const aplicacion = await db.obtenerAplicacionPorId(id);
+            return aplicacion;
+        } catch (error) {
+            throw new Error('Error al obtener la aplicación por ID');
+        }
     }
     function add(body) {
         return db.agregar(tabla, body);
