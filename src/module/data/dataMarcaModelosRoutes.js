@@ -14,20 +14,20 @@ router.get('/', async (req, res) => {
                     id_marca_auto,
                     cantidad_modelos,
                     img_url_marca,
-                    modelos: []
+                    modelos: {}
                 };
             } else {
                 dataEstructurada[nombre_marca].cantidad_modelos++;
             }
             
-            dataEstructurada[nombre_marca].modelos.push({
+            dataEstructurada[nombre_marca].modelos[id_modelo_auto] = {
                 id_modelo_auto,
                 nombre_modelo,
                 anio_inicio: anio_inicio || '',
                 anio_termino: anio_termino || '',
                 img_url_modelo: img_url_modelo || '',
                 cantidad_productos
-            });
+            };
         });
         
         res.status(200).json(dataEstructurada);
