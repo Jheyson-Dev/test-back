@@ -23,11 +23,13 @@ async function getAll(req, res){
 };
 
 async function getById(req, res){
-    try{
-        const items = await controller.getById(req.params.id);
-        retorno.success(req, res, items, 200);
-    }catch(err){
-        retorno.error(req, res, err, 500);
+    const idProducto = req.params.id;
+    try {
+        const producto = await controller.getById(idProducto);
+        res.status(200).json(producto);
+    } catch (error) {
+        console.error('Error al obtener el producto por ID:', error);
+        res.status(500).json({ error: true, message: 'Error interno' });
     }
     
 };

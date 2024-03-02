@@ -11,8 +11,13 @@ module.exports = function (dbInjected) {
     function getAll() {
         return db.obtenerProductosConCategoria();
     }
-    function getById(id) {
-        return db.obtenerPorId(tabla, id);
+    async function getById(id) {
+        try {
+            const producto = await db.obtenerProductoConCategoriaPorId(id);
+            return producto;
+        } catch (error) {
+            throw new Error('Error al obtener el producto por ID');
+        }
     }
     function add(body) {
         return db.agregar(tabla, body);

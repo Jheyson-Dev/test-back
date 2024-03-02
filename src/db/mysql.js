@@ -513,6 +513,25 @@ async function obtenerProductosConCategoria() {
     });
 }
 
+async function obtenerProductoConCategoriaPorId(idProducto) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT p.*, c.id_categoria,c.nombre_producto
+            FROM producto p
+            INNER JOIN categoria c ON p.id_categoria = c.id_categoria
+            WHERE p.id_producto = ?`;
+
+            conexion.query(query, [idProducto], (error, resultados) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(resultados);
+                }
+            });
+        }
+    );
+}
+
 module.exports = {
     conexion,
     obtenerTodos,
@@ -528,12 +547,13 @@ module.exports = {
     getIngresoProductos,
     buscarProductosPorCodigo,
     obtenerModelosPorMarca,
-
-
     obtenerProductoPorId,
     obtenerCategoriaProducto,
     obtenerReemplazosProducto,
     obtenerImagenesProducto,
     obtenerAplicacionesProducto,
-    obtenerProductosConCategoria
+    obtenerProductosConCategoria,
+    obtenerProductoConCategoriaPorId,
+
+    
 }
