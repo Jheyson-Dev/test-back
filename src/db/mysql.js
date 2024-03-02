@@ -334,6 +334,8 @@ async function buscarProductosPorCodigo(busqueda) {
             SELECT
                 COALESCE(ma.nombre, '') AS nombre_marca_auto,
                 COALESCE(mo.nombre, '') AS nombre_modelo_auto,
+                COALESCE(mo.anio_inicio, '') AS anio_inicio,
+                COALESCE(mo.anio_termino, '') AS anio_termino,
                 COALESCE(cat.nombre_producto, '') AS nombre_producto,
                 p.*,
                 COALESCE(ip.img_url, '') AS url_imagen_producto
