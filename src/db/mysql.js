@@ -496,12 +496,15 @@ async function obtenerAplicacionesProducto(idProducto) {
 
 
 
-const productoConNombre = `SELECT p.*, c.id_categoria,c.nombre_producto
+const productoConNombre = `SELECT p.*, c.id_categoria, c.nombre_producto,
+    GROUP_CONCAT(ip.img_url) AS imagenes
 FROM producto p
 INNER JOIN categoria c ON p.id_categoria = c.id_categoria
-`
+LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+GROUP BY p.id_producto`;
+
 async function obtenerProductosConCategoria() {
-    const query = productoConNombre;
+    const query = `${productoConNombre}`;
     return new Promise((resolve, reject) => {
         conexion.query(query, (error, resultados) => {
             if (error) {
@@ -515,18 +518,22 @@ async function obtenerProductosConCategoria() {
 
 async function obtenerProductoConCategoriaPorId(idProducto) {
     return new Promise((resolve, reject) => {
-        const query = `${productoConNombre}
-            WHERE p.id_producto = ?`;
+        const query = `
+            SELECT p.*, c.id_categoria, c.nombre_producto, GROUP_CONCAT(ip.img_url) AS imagenes
+            FROM producto p
+            INNER JOIN categoria c ON p.id_categoria = c.id_categoria
+            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            WHERE p.id_producto = ?
+            GROUP BY p.id_producto`;
 
-            conexion.query(query, [idProducto], (error, resultados) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(resultados);
-                }
-            });
-        }
-    );
+        conexion.query(query, [idProducto], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
 }
 
 const imagenesCodigoInterno=  `SELECT ip.*, p.id_producto, p.codigo_interno
