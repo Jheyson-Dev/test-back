@@ -17,12 +17,12 @@ module.exports = function (dbInjected) {
         }
     }
     
-    async function getById(id) {
+    async function getById(idModeloAuto) {
         try {
-            const modeloAuto = await db.obtenerModeloAutoPorId(id);
-            return modeloAuto;
+            const modeloAutoYProductosConImagenes = await db.obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto);
+            return modeloAutoYProductosConImagenes;
         } catch (error) {
-            throw new Error('Error al obtener el modelo de auto por su ID');
+            throw new Error('Error al obtener modelo auto y productos con imágenes por ID de modelo');
         }
     }
     function add(body) {

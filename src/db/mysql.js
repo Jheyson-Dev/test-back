@@ -666,6 +666,69 @@ async function obtenerModeloAutoPorId(idModeloAuto) {
     });
 }
 
+async function obtenerProductosConImagenesYCategoriaPorIDCategoria(idCategoria) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                c.id_categoria, 
+                c.nombre_producto, 
+                c.campo_medicion, 
+                c.url_campo_medicion,
+                p.*,
+                GROUP_CONCAT(ip.img_url) AS imagenes
+            FROM 
+                categoria c
+                INNER JOIN producto p ON c.id_categoria = p.id_categoria
+                LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            WHERE 
+                c.id_categoria = ?
+            GROUP BY 
+                p.id_producto`;
+
+        conexion.query(query, [idCategoria], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
+
+
+async function obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+            ma.*, -- Datos de modelo_auto
+            ma.id_marca_auto, -- Agrega el ID de la marca_auto
+            ma.nombre AS nombre_modelo_auto, -- Agrega el nombre del modelo_auto
+            marca.nombre AS nombre_marca_auto, -- Agrega el nombre de la marca_auto
+            p.*, -- Datos del producto
+            c.nombre_producto AS nombre_producto_categoria,
+            GROUP_CONCAT(ip.img_url) AS imagenes
+        FROM 
+            modelo_auto ma
+            INNER JOIN aplicacion a ON ma.id_modelo_auto = a.id_modelo_auto
+            INNER JOIN producto p ON a.id_producto = p.id_producto
+            LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
+            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            LEFT JOIN marca_auto marca ON ma.id_marca_auto = marca.id_marca_auto -- Agrega la tabla de marca_auto
+        WHERE 
+            ma.id_modelo_auto = ?
+    
+            GROUP BY 
+                p.id_producto`;
+
+        conexion.query(query, [idModeloAuto], (error, resultados) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(resultados);
+            }
+        });
+    });
+}
 module.exports = {
     conexion,
     obtenerTodos,
@@ -681,7 +744,6 @@ module.exports = {
     getIngresoProductos,
     buscarProductosPorCodigo,
     obtenerModelosPorIdMarca,
-
     obtenerProductoPorId,
     obtenerCategoriaProducto,
     obtenerReemplazosProducto,
@@ -696,5 +758,7 @@ module.exports = {
     obtenerTodasAplicaciones,
     obtenerAplicacionPorId,
     obtenerModeloAutoConMarca,
-    obtenerModeloAutoPorId    
+    obtenerModeloAutoPorId,
+    obtenerProductosConImagenesYCategoriaPorIDCategoria,
+    obtenerModeloAutoYProductosConImagenesPorIDModelo
 }
