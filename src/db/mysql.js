@@ -670,10 +670,7 @@ async function obtenerProductosConImagenesYCategoriaPorIDCategoria(idCategoria) 
     return new Promise((resolve, reject) => {
         const query = `
             SELECT 
-                c.id_categoria, 
-                c.nombre_producto, 
-                c.campo_medicion, 
-                c.url_campo_medicion,
+                c.*,
                 p.*,
                 GROUP_CONCAT(ip.img_url) AS imagenes
             FROM 
@@ -701,10 +698,10 @@ async function obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto) {
         const query = `
             SELECT 
             ma.*, -- Datos de modelo_auto
-            ma.id_marca_auto, -- Agrega el ID de la marca_auto
-            ma.nombre AS nombre_modelo_auto, -- Agrega el nombre del modelo_auto
-            marca.nombre AS nombre_marca_auto, -- Agrega el nombre de la marca_auto
-            p.*, -- Datos del producto
+            ma.id_marca_auto,
+            ma.nombre AS nombre_modelo_auto,
+            marca.nombre AS nombre_marca_auto,
+            p.*,
             c.nombre_producto AS nombre_producto_categoria,
             GROUP_CONCAT(ip.img_url) AS imagenes
         FROM 
@@ -713,7 +710,7 @@ async function obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto) {
             INNER JOIN producto p ON a.id_producto = p.id_producto
             LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
             LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-            LEFT JOIN marca_auto marca ON ma.id_marca_auto = marca.id_marca_auto -- Agrega la tabla de marca_auto
+            LEFT JOIN marca_auto marca ON ma.id_marca_auto = marca.id_marca_auto
         WHERE 
             ma.id_modelo_auto = ?
     

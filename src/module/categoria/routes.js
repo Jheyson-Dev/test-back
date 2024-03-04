@@ -32,8 +32,22 @@ async function getById(req, res) {
             campo_medicion: productosConImagenes[0].campo_medicion,
             url_campo_medicion: productosConImagenes[0].url_campo_medicion,
             productos: productosConImagenes.map(producto => ({
-                ...producto,
-                imagenes: producto.imagenes.split(',')
+                id_producto: producto.id_producto,
+                nombre_producto: producto.nombre_producto_categoria,
+                codigo_OEM: producto.codigo_OEM,
+                codigo_interno: producto.codigo_interno,
+                codigo_fabricante: producto.codigo_fabricante,
+                origen: producto.origen,
+                marca_fabricante: producto.marca_fabricante,
+                descripcion: producto.descripcion,
+                multiplos: producto.multiplos,
+                precio: producto.precio,
+                stock: producto.stock,
+                oferta: producto.oferta,
+                numero_consulta: producto.numero_consulta,
+                medida: producto.medida,
+                id_categoria: producto.id_categoria,
+                imagenes: producto.imagenes ? producto.imagenes.split(',') : [],
             }))
         };
         res.status(200).json(response);

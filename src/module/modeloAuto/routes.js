@@ -43,7 +43,7 @@ async function getById(req, res) {
             numero_consulta: producto.numero_consulta,
             medida: producto.medida,
             id_categoria: producto.id_categoria,
-            imagenes: producto.imagenes.split(',')
+            imagenes: producto.imagenes ? producto.imagenes.split(',') : [],
         }));
 
         const response = {
