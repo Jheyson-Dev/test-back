@@ -15,8 +15,7 @@ module.exports = function (dbInjected) {
         } catch (error) {
             throw new Error('Error al obtener todos los modelos de auto');
         }
-    }
-    
+    }    
     async function getById(idModeloAuto) {
         try {
             const modeloAutoYProductosConImagenes = await db.obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto);
@@ -40,7 +39,7 @@ module.exports = function (dbInjected) {
         getById,
         add,
         update,
-        remove
+        remove,
     }
     
 }

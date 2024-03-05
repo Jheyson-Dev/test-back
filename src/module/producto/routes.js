@@ -33,7 +33,8 @@ async function getById(req, res) {
     const idProducto = req.params.id;
     try {
         const producto = await controller.getById(idProducto);
-        const imagenes = producto[0].imagenes.split(',');
+        const imagenes = producto[0].imagenes ? producto[0].imagenes.split(',') : [];
+        
         producto[0].imagenes = imagenes;
 
         res.status(200).json(producto);

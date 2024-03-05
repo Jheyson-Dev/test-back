@@ -696,26 +696,23 @@ async function obtenerProductosConImagenesYCategoriaPorIDCategoria(idCategoria) 
 async function obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto) {
     return new Promise((resolve, reject) => {
         const query = `
-            SELECT 
-            ma.*, -- Datos de modelo_auto
-            ma.id_marca_auto,
-            ma.nombre AS nombre_modelo_auto,
+        SELECT 
+            ma.*,
             marca.nombre AS nombre_marca_auto,
             p.*,
             c.nombre_producto AS nombre_producto_categoria,
             GROUP_CONCAT(ip.img_url) AS imagenes
         FROM 
             modelo_auto ma
-            INNER JOIN aplicacion a ON ma.id_modelo_auto = a.id_modelo_auto
-            INNER JOIN producto p ON a.id_producto = p.id_producto
+            LEFT JOIN aplicacion a ON ma.id_modelo_auto = a.id_modelo_auto
+            LEFT JOIN producto p ON a.id_producto = p.id_producto
             LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
             LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
             LEFT JOIN marca_auto marca ON ma.id_marca_auto = marca.id_marca_auto
         WHERE 
             ma.id_modelo_auto = ?
-    
-            GROUP BY 
-                p.id_producto`;
+        GROUP BY 
+            p.id_producto;`;
 
         conexion.query(query, [idModeloAuto], (error, resultados) => {
             if (error) {
@@ -726,6 +723,8 @@ async function obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto) {
         });
     });
 }
+
+
 module.exports = {
     conexion,
     obtenerTodos,
