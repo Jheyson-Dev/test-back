@@ -67,27 +67,27 @@ function agregar(tabla, data) {
     });
 }
 
-function agregarConStock(tabla, data) {
-    conexion.query(`INSERT INTO ${tabla} SET ?`, data, (error, result) => {
-        if (error) {
-            console.error('Error al insertar ingreso:', error);
-            throw error;
-        }
-        const { cantidad, id_producto } = data;
-        conexion.query(
-            `UPDATE producto SET stock = stock + ? WHERE id_producto = ?`,
-            [cantidad, id_producto],
-            (updateError, updateResult) => {
-                if (updateError) {
-                    console.error('Error al actualizar stock del producto:', updateError);
-                    throw updateError;
-                }
+// function agregarConStock(tabla, data) {
+//     conexion.query(`INSERT INTO ${tabla} SET ?`, data, (error, result) => {
+//         if (error) {
+//             console.error('Error al insertar ingreso:', error);
+//             throw error;
+//         }
+//         const { cantidad, id_producto } = data;
+//         conexion.query(
+//             `UPDATE producto SET stock = stock + ? WHERE id_producto = ?`,
+//             [cantidad, id_producto],
+//             (updateError, updateResult) => {
+//                 if (updateError) {
+//                     console.error('Error al actualizar stock del producto:', updateError);
+//                     throw updateError;
+//                 }
 
-                console.log('Inserción de ingreso y actualización de stock exitosas');
-            }
-        );
-    });
-}
+//                 console.log('Inserción de ingreso y actualización de stock exitosas');
+//             }
+//         );
+//     });
+// }
 
 function actualizar(tabla, id, newData) {
     const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
@@ -110,85 +110,85 @@ function actualizar(tabla, id, newData) {
 }
 
 
-async function actualizarConStock(tabla, id, newData) {
-    const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
-    const [ingresoAnterior] = await obtenerPorId(tabla, id);
-    const cantidadAnterior = ingresoAnterior.cantidad;
-    const nuevaCantidad = newData.cantidad;
-    const diferenciaCantidad = nuevaCantidad - cantidadAnterior;
-    const idProductoAnterior = ingresoAnterior.id_producto;
-    const idProductoNuevo = newData.id_producto;
-    const idProductoCambiado = idProductoAnterior !== idProductoNuevo;
+// async function actualizarConStock(tabla, id, newData) {
+//     const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
+//     const [ingresoAnterior] = await obtenerPorId(tabla, id);
+//     const cantidadAnterior = ingresoAnterior.cantidad;
+//     const nuevaCantidad = newData.cantidad;
+//     const diferenciaCantidad = nuevaCantidad - cantidadAnterior;
+//     const idProductoAnterior = ingresoAnterior.id_producto;
+//     const idProductoNuevo = newData.id_producto;
+//     const idProductoCambiado = idProductoAnterior !== idProductoNuevo;
 
-    if (diferenciaCantidad === 0 && idProductoCambiado) {
-        console.log('No se pudo realizar la acción. La cantidad del ingreso no ha cambiado y se ha cambiado el ID del producto.');
-        return;
-    }
-    const esAumento = diferenciaCantidad > 0;
-    const cantidadAbsoluta = Math.abs(diferenciaCantidad);
-    if (cantidadAbsoluta !== 0) {
-        try {
-            if (esAumento) {
-                await sumarStockProducto(ingresoAnterior.id_producto, cantidadAbsoluta);
-            } else {
-                await restarStockProducto(ingresoAnterior.id_producto, cantidadAbsoluta);
-            }
-        } catch (error) {
-            console.error('Error al actualizar el stock del producto:', error);
-            throw error;
-        }
-    }
+//     if (diferenciaCantidad === 0 && idProductoCambiado) {
+//         console.log('No se pudo realizar la acción. La cantidad del ingreso no ha cambiado y se ha cambiado el ID del producto.');
+//         return;
+//     }
+//     const esAumento = diferenciaCantidad > 0;
+//     const cantidadAbsoluta = Math.abs(diferenciaCantidad);
+//     if (cantidadAbsoluta !== 0) {
+//         try {
+//             if (esAumento) {
+//                 await sumarStockProducto(ingresoAnterior.id_producto, cantidadAbsoluta);
+//             } else {
+//                 await restarStockProducto(ingresoAnterior.id_producto, cantidadAbsoluta);
+//             }
+//         } catch (error) {
+//             console.error('Error al actualizar el stock del producto:', error);
+//             throw error;
+//         }
+//     }
 
-    conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], async (error, result) => {
-        if (error) {
-            console.error('Error al actualizar:', error);
-            throw error;
-        }
+//     conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], async (error, result) => {
+//         if (error) {
+//             console.error('Error al actualizar:', error);
+//             throw error;
+//         }
 
-        if (result.affectedRows > 0) {
-            console.log('Actualización de ingreso y stock del producto exitosas');
-        } else {
-            console.error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
-            throw new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
-        }
-    });
-}
+//         if (result.affectedRows > 0) {
+//             console.log('Actualización de ingreso y stock del producto exitosas');
+//         } else {
+//             console.error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
+//             throw new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
+//         }
+//     });
+// }
 
-async function restarStockProducto(id_producto, cantidad) {
-    return new Promise((resolve, reject) => {
-        conexion.query(
-            `UPDATE producto SET stock = stock - ? WHERE id_producto = ?`,
-            [cantidad, id_producto],
-            (error, result) => {
-                if (error) {
-                    console.error('Error al restar el stock del producto:', error);
-                    reject(error);
-                } else {
-                    console.log('Resta de stock del producto anterior exitosa');
-                    resolve(result);
-                }
-            }
-        );
-    });
-}
+// async function restarStockProducto(id_producto, cantidad) {
+//     return new Promise((resolve, reject) => {
+//         conexion.query(
+//             `UPDATE producto SET stock = stock - ? WHERE id_producto = ?`,
+//             [cantidad, id_producto],
+//             (error, result) => {
+//                 if (error) {
+//                     console.error('Error al restar el stock del producto:', error);
+//                     reject(error);
+//                 } else {
+//                     console.log('Resta de stock del producto anterior exitosa');
+//                     resolve(result);
+//                 }
+//             }
+//         );
+//     });
+// }
 
-async function sumarStockProducto(id_producto, cantidad) {
-    return new Promise((resolve, reject) => {
-        conexion.query(
-            `UPDATE producto SET stock = stock + ? WHERE id_producto = ?`,
-            [cantidad, id_producto],
-            (error, result) => {
-                if (error) {
-                    console.error('Error al actualizar el stock del nuevo producto:', error);
-                    reject(error);
-                } else {
-                    console.log('Suma de stock del nuevo producto exitosa');
-                    resolve(result);
-                }
-            }
-        );
-    });
-}
+// async function sumarStockProducto(id_producto, cantidad) {
+//     return new Promise((resolve, reject) => {
+//         conexion.query(
+//             `UPDATE producto SET stock = stock + ? WHERE id_producto = ?`,
+//             [cantidad, id_producto],
+//             (error, result) => {
+//                 if (error) {
+//                     console.error('Error al actualizar el stock del nuevo producto:', error);
+//                     reject(error);
+//                 } else {
+//                     console.log('Suma de stock del nuevo producto exitosa');
+//                     resolve(result);
+//                 }
+//             }
+//         );
+//     });
+// }
 
 function eliminar(tabla, id) {
     const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
@@ -207,10 +207,61 @@ function eliminar(tabla, id) {
     });
 }
 
+const productosOferta = `
+SELECT 
+    o.id_oferta,
+    MAX(o.descripcion) AS descripcion_oferta,
+    o.descuento,
+    o.priorizacion,
+    c.nombre_producto,
+    p.*,    
+    (SELECT SUM(stock) FROM tienda_producto WHERE id_producto = p.id_producto) AS total_stock,
+    GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC) AS stock_por_tienda,
+    (SELECT JSON_ARRAYAGG(img_url) FROM img_producto WHERE id_producto = p.id_producto) AS imagenes
+FROM 
+    producto p
+LEFT JOIN 
+    categoria c ON p.id_categoria = c.id_categoria
+JOIN 
+    oferta o ON p.id_producto = o.id_producto
+LEFT JOIN 
+    tienda_producto tp ON p.id_producto = tp.id_producto
+LEFT JOIN 
+    tienda t ON tp.id_tienda = t.id_tienda
+LEFT JOIN
+    img_producto ip ON p.id_producto = ip.id_producto`
+
+function obtenerProductosConPriorizacionSI() {
+    return new Promise((resolve, reject) => {
+        conexion.query(`
+        ${productosOferta}
+        WHERE 
+            o.priorizacion = 'si'
+        GROUP BY 
+            p.id_producto, c.nombre_producto, o.descuento, o.id_oferta
+        `, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+function obtenerProductosConOferta() {
+    return new Promise((resolve, reject) => {
+        conexion.query(`${productosOferta}
+    GROUP BY 
+        p.id_producto, c.nombre_producto, o.descuento, o.priorizacion, o.id_oferta
+        `, (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
 
 async function actualizarNumeroConsulta(idProducto) {
     try {
-      const query = `UPDATE producto SET numero_consulta = numero_consulta + 1 WHERE id_producto = ?`;
+      const query = `UPDATE producto SET consultas = consultas + 1 WHERE id_producto = ?`;
       const [resultado] = await conexion.promise().execute(query, [idProducto]);
       return resultado;
     } catch (error) {
@@ -730,11 +781,17 @@ module.exports = {
     obtenerTodos,
     obtenerPorId,
     agregar,
-    agregarConStock,
+    // agregarConStock,
     actualizar,
-    actualizarConStock,
+    // actualizarConStock,
     eliminar,
+    obtenerProductosConPriorizacionSI,
+    obtenerProductosConOferta,
     actualizarNumeroConsulta,
+
+
+
+    
     getDestacadosByConsulta,
     getOfertas,
     getIngresoProductos,
