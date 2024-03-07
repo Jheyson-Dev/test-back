@@ -8,21 +8,11 @@ module.exports = function (dbInjected) {
         db = require('../../db/mysql')
     }
 
-    async function getAll() {
-        try {
-            const reemplazos = await db.obtenerTodosReemplazos();
-            return reemplazos;
-        } catch (error) {
-            throw new Error('Error al obtener todos los reemplazos');
-        }
+    function getAll() {
+        return db.obtenerTodos(tabla);
     }
-    async function getById(id) {
-        try {
-            const reemplazo = await db.obtenerReemplazoPorId(id);
-            return reemplazo;
-        } catch (error) {
-            throw new Error('Error al obtener el reemplazo por ID');
-        }
+    function getById(id) {
+        return db.obtenerPorId(tabla, id);
     }
     function add(body) {
         return db.agregar(tabla, body);

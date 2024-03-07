@@ -25,15 +25,9 @@ module.exports = function (dbInjected) {
     function getById(id) {
         return db.obtenerPorId(tabla, id);
     }
-    function add(body) {
-        return db.agregar(tabla, body);
-    }
     async function add(body) {
         body.password = await hashPassword(body.password);
         return db.agregar(tabla, body);
-    }
-    function update(id, newData) {
-        return db.actualizar(tabla, id, newData);
     }
     async function update(id, newData) {
         if (newData.password) {

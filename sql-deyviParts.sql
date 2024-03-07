@@ -6,6 +6,7 @@ CREATE TABLE categoria (
                 nombre_producto VARCHAR(254) NOT NULL,
                 campo_medicion VARCHAR(254) NOT NULL,
                 url_campo_medicion VARCHAR(255) NOT NULL,
+                tipo VARCHAR(100) NOT NULL,
                 PRIMARY KEY (id_categoria)
 );
 
@@ -20,18 +21,11 @@ CREATE TABLE marca_auto (
 CREATE TABLE modelo_auto (
                 id_modelo_auto INT AUTO_INCREMENT NOT NULL,
                 nombre VARCHAR(254) NOT NULL,
-                anio_inicio VARCHAR(15) NOT NULL,
-                anio_termino VARCHAR(15) NOT NULL,
+                anio_inicio_termino VARCHAR(60) NOT NULL,
+                motor VARCHAR(150) NULL,
                 img_url VARCHAR(500) NOT NULL,
                 id_marca_auto INT NOT NULL,
                 PRIMARY KEY (id_modelo_auto)
-);
-
-CREATE TABLE auto (
-                id_auto INT AUTO_INCREMENT NOT NULL,
-                id_modelo_auto INT NOT NULL,
-                placa VARCHAR(20) NOT NULL,
-                PRIMARY KEY (id_auto)
 );
 
 
@@ -44,12 +38,13 @@ CREATE TABLE producto (
                 marca_fabricante VARCHAR(500) NOT NULL,
                 descripcion VARCHAR(500) NOT NULL,
                 multiplos VARCHAR(200) NOT NULL,
-                precio DOUBLE PRECISION NOT NULL,
-                stock INT NOT NULL,
-                oferta CHAR(2) DEFAULT 'no' CHECK (oferta IN ('no', 'si')),
-                numero_consulta int DEFAULT 0,
+                pc DOUBLE PRECISION NOT NULL,
+                consultas int DEFAULT 0,
                 medida VARCHAR(254) NOT NULL,
                 id_categoria INT NOT NULL,
+                precio_compra DOUBLE PRECISION NOT NULL,
+                precio_venta DOUBLE PRECISION NOT NULL,
+                precio_minimo DOUBLE PRECISION NOT NULL,
                 PRIMARY KEY (id_producto)
 );
 
@@ -61,12 +56,13 @@ CREATE TABLE img_producto (
                 PRIMARY KEY (id_img_producto)
 );
 
-CREATE TABLE ingreso (
-                id_ingreso INT AUTO_INCREMENT NOT NULL,
-                cantidad INT NOT NULL,
-                fecha_hora DATETIME NOT NULL,
+CREATE TABLE oferta (
+                id_oferta INT AUTO_INCREMENT NOT NULL,
                 id_producto INT NOT NULL,
-                PRIMARY KEY (id_ingreso)
+                descripcion VARCHAR(500) NOT NULL,
+                priorizacion CHAR(2) DEFAULT 'no' CHECK (priorizacion IN ('no', 'si')),
+                descuento DOUBLE PRECISION NOT NULL,
+                PRIMARY KEY (id_oferta)
 );
 
 CREATE TABLE reemplazo (
@@ -74,6 +70,7 @@ CREATE TABLE reemplazo (
                 id_producto INT NOT NULL,
                 producto_reemplazo INT NOT NULL,
                 variacion DOUBLE PRECISION NOT NULL,
+                notas VARCHAR(400) NOT NULL,
                 PRIMARY KEY (id_reemplazo)
 );
 
@@ -93,7 +90,91 @@ CREATE TABLE usuario (
     PRIMARY KEY (id_usuario)
 );
 
+CREATE TABLE tienda (
+    id_tienda INT AUTO_INCREMENT NOT NULL,
+    ruc VARCHAR(100) NOT NULL,
+    razon_social VARCHAR(150) NOT NULL,
+    direccion VARCHAR(150) NOT NULL,
+    encargado VARCHAR(150) NOT NULL,
+    celular VARCHAR(15) NOT NULL,
+    PRIMARY KEY (id_tienda)
+);
 
+
+CREATE TABLE tienda_usuario (
+    id_tienda_usuario INT AUTO_INCREMENT NOT NULL,
+    id_usuario INT NOT NULL,
+    id_tienda INT NOT NULL,
+    PRIMARY KEY (id_tienda_usuario)
+);
+
+CREATE TABLE tienda_producto (
+    id_tienda_producto INT AUTO_INCREMENT NOT NULL,
+    id_producto INT NOT NULL,
+    id_tienda INT NOT NULL,
+    stock INT DEFAULT 0 NULL,
+    PRIMARY KEY (id_tienda_producto)
+);
+
+
+CREATE TABLE ingreso (
+                id_ingreso INT AUTO_INCREMENT NOT NULL,
+                cantidad INT NOT NULL,
+                fecha_hora VARCHAR(100) NOT NULL,
+                id_producto INT NOT NULL,
+                id_tienda_producto INT NOT NULL,
+                PRIMARY KEY (id_ingreso)
+);
+
+
+-- Tablas unitarias (solo registros)
+
+CREATE TABLE auto (
+                id_auto INT AUTO_INCREMENT NOT NULL,
+                placa VARCHAR(20) NOT NULL,
+                serie_vin VARCHAR(150) NOT NULL,
+                img_url VARCHAR(500) NOT NULL,
+                PRIMARY KEY (id_auto)
+);
+CREATE TABLE reduccion_inventario (
+                id_reduccion_inventario INT AUTO_INCREMENT NOT NULL,
+                codigo_producto VARCHAR(20) NOT NULL,
+                sede VARCHAR(20) NOT NULL,
+                cantidad INT NULL,
+                usuario VARCHAR(50) NOT NULL,
+                fecha_hora DATETIME NOT NULL,
+                PRIMARY KEY (id_reduccion_inventario)
+);
+CREATE TABLE compra (
+                id_compra INT AUTO_INCREMENT NOT NULL,
+                numero_factura VARCHAR(20) NOT NULL,
+                proveedor VARCHAR(20) NOT NULL,
+                fecha_inicio_vencimiento VARCHAR(60) NOT NULL,
+                estado CHAR(1) DEFAULT 1 CHECK (estado IN (1, 0)),
+                img_url VARCHAR(500) NOT NULL,
+                PRIMARY KEY (id_compra)
+);
+CREATE TABLE pedido (
+                id_pedido INT AUTO_INCREMENT NOT NULL,
+                descripcion VARCHAR(400) NOT NULL,
+                medidas VARCHAR(100) NOT NULL,
+                cantidad INT NULL,
+                img_url VARCHAR(500) NOT NULL,
+                PRIMARY KEY (id_pedido)
+);
+CREATE TABLE traspaso (
+                id_traspaso INT AUTO_INCREMENT NOT NULL,
+                codigo_producto VARCHAR(20) NOT NULL,
+                cantidad INT NULL,
+                usuario VARCHAR(50) NOT NULL,
+                fecha_hora VARCHAR(100) NOT NULL,
+                tienda_origen VARCHAR(100) NOT NULL,
+                tienda_destino VARCHAR(100) NOT NULL,
+                PRIMARY KEY (id_traspaso)
+);
+
+
+-- FKs
 ALTER TABLE producto ADD CONSTRAINT categoria_produco_fk
 FOREIGN KEY (id_categoria)
 REFERENCES categoria (id_categoria)
@@ -103,12 +184,6 @@ ON UPDATE CASCADE;
 ALTER TABLE modelo_auto ADD CONSTRAINT marca_auto_modelo_auto_fk
 FOREIGN KEY (id_marca_auto)
 REFERENCES marca_auto (id_marca_auto)
-ON DELETE CASCADE
-ON UPDATE CASCADE;
-
-ALTER TABLE auto ADD CONSTRAINT modelo_auto_auto_fk
-FOREIGN KEY (id_modelo_auto)
-REFERENCES modelo_auto (id_modelo_auto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
@@ -136,14 +211,50 @@ REFERENCES producto (id_producto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
+ALTER TABLE img_producto ADD CONSTRAINT producto_img_producto_fk
+FOREIGN KEY (id_producto)
+REFERENCES producto (id_producto)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE oferta ADD CONSTRAINT producto_oferta_fk
+FOREIGN KEY (id_producto)
+REFERENCES producto (id_producto)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE tienda_usuario ADD CONSTRAINT usuario_tienda_usuario_fk
+FOREIGN KEY (id_usuario)
+REFERENCES usuario (id_usuario)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE tienda_usuario ADD CONSTRAINT tienda_tienda_usuario_fk
+FOREIGN KEY (id_tienda)
+REFERENCES tienda (id_tienda)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE tienda_producto ADD CONSTRAINT producto_tienda_producto_fk
+FOREIGN KEY (id_producto)
+REFERENCES producto (id_producto)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE tienda_producto ADD CONSTRAINT tienda_tienda_producto_fk
+FOREIGN KEY (id_tienda)
+REFERENCES tienda (id_tienda)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
 ALTER TABLE ingreso ADD CONSTRAINT producto_ingreso_fk
 FOREIGN KEY (id_producto)
 REFERENCES producto (id_producto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
-ALTER TABLE img_producto ADD CONSTRAINT producto_img_producto_fk
-FOREIGN KEY (id_producto)
-REFERENCES producto (id_producto)
+ALTER TABLE ingreso ADD CONSTRAINT tienda_producto_ingreso_fk
+FOREIGN KEY (id_tienda_producto)
+REFERENCES tienda_producto (id_tienda_producto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;

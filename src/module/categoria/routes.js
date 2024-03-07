@@ -12,7 +12,6 @@ router.put('/:id', update);
 router.delete('/:id', remove);
 
 
-
 async function getAll(req, res){
     try{
         const items = await controller.getAll();
@@ -22,40 +21,15 @@ async function getAll(req, res){
     }
 };
 
-async function getById(req, res) {
-    const idCategoria = req.params.id;
-    try {
-        const productosConImagenes = await controller.getById(idCategoria);
-        const response = {
-            id_categoria: productosConImagenes[0].id_categoria,
-            nombre_producto: productosConImagenes[0].nombre_producto,
-            campo_medicion: productosConImagenes[0].campo_medicion,
-            url_campo_medicion: productosConImagenes[0].url_campo_medicion,
-            productos: productosConImagenes.map(producto => ({
-                id_producto: producto.id_producto,
-                nombre_producto: producto.nombre_producto_categoria,
-                codigo_OEM: producto.codigo_OEM,
-                codigo_interno: producto.codigo_interno,
-                codigo_fabricante: producto.codigo_fabricante,
-                origen: producto.origen,
-                marca_fabricante: producto.marca_fabricante,
-                descripcion: producto.descripcion,
-                multiplos: producto.multiplos,
-                precio: producto.precio,
-                stock: producto.stock,
-                oferta: producto.oferta,
-                numero_consulta: producto.numero_consulta,
-                medida: producto.medida,
-                id_categoria: producto.id_categoria,
-                imagenes: producto.imagenes ? producto.imagenes.split(',') : [],
-            }))
-        };
-        res.status(200).json(response);
-    } catch (error) {
-        console.error('Error al obtener productos con imágenes y categoría por ID de categoría:', error);
-        res.status(500).json({ error: true, message: 'Error interno' });
-    } 
-}
+async function getById(req, res){
+    try{
+        const items = await controller.getById(req.params.id);
+        retorno.success(req, res, items, 200);
+    }catch(err){
+        retorno.error(req, res, err, 500);
+    }
+    
+};
 
 async function add(req, res, next) {
     try {

@@ -11,13 +11,8 @@ module.exports = function (dbInjected) {
     function getAll() {
         return db.obtenerTodos(tabla);
     }
-    async function getById(idCategoria) {
-        try {
-            const productosConImagenes = await db.obtenerProductosConImagenesYCategoriaPorIDCategoria(idCategoria);
-            return productosConImagenes;
-        } catch (error) {
-            throw new Error('Error al obtener productos con imágenes y categoría por ID de categoría');
-        }
+    function getById(id) {
+        return db.obtenerPorId(tabla, id);
     }
     function add(body) {
         return db.agregar(tabla, body);

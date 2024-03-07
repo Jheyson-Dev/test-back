@@ -12,7 +12,6 @@ router.put('/:id', update);
 router.delete('/:id', remove);
 
 
-
 async function getAll(req, res){
     try{
         const items = await controller.getAll();

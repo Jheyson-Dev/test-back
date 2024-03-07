@@ -14,35 +14,23 @@ router.delete('/:id', remove);
 
 
 async function getAll(req, res){
-    try {
-        const productos = await controller.getAll();
-        productos.forEach(producto => {
-            if (producto.imagenes) {
-                producto.imagenes = producto.imagenes.split(',');
-            } else {
-                producto.imagenes = [];
-            }
-        });
-        retorno.success(req, res, productos, 200);
-    } catch (err) {
+    try{
+        const items = await controller.getAll();
+        retorno.success(req, res, items, 200);
+    }catch(err){
         retorno.error(req, res, err, 500);
     }
-}
+};
 
-async function getById(req, res) {
-    const idProducto = req.params.id;
-    try {
-        const producto = await controller.getById(idProducto);
-        const imagenes = producto[0].imagenes ? producto[0].imagenes.split(',') : [];
-        
-        producto[0].imagenes = imagenes;
-
-        res.status(200).json(producto);
-    } catch (error) {
-        console.error('Error al obtener el producto por ID:', error);
-        res.status(500).json({ error: true, message: 'Error interno' });
-    } 
-}
+async function getById(req, res){
+    try{
+        const items = await controller.getById(req.params.id);
+        retorno.success(req, res, items, 200);
+    }catch(err){
+        retorno.error(req, res, err, 500);
+    }
+    
+};
 
 async function add(req, res, next) {
     try {

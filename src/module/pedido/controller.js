@@ -1,4 +1,4 @@
-const tabla = 'producto';
+const tabla = 'pedido';
 
 module.exports = function (dbInjected) {
 
@@ -29,7 +29,7 @@ module.exports = function (dbInjected) {
         getById,
         add,
         update,
-        remove, 
+        remove
     }
     
 }

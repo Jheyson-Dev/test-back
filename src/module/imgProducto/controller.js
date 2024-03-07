@@ -8,15 +8,10 @@ module.exports = function (dbInjected) {
         db = require('../../db/mysql')
     }
     function getAll() {
-        return db.obtenerImagenesConCodigoInterno();
+        return db.obtenerTodos(tabla);
     }
-    async function getById(id) {
-        try {
-            const imagen = await db.obtenerImagenesConCInternoPorId(id);
-            return imagen;
-        } catch (error) {
-            throw new Error('Error al obtener la imagen por ID');
-        }
+    function getById(id) {
+        return db.obtenerPorId(tabla, id);
     }
     function add(body) {
         return db.agregar(tabla, body);

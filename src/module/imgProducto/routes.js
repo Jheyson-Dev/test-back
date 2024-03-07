@@ -12,7 +12,6 @@ router.put('/:id', update);
 router.delete('/:id', remove);
 
 
-
 async function getAll(req, res){
     try{
         const items = await controller.getAll();
@@ -25,7 +24,7 @@ async function getAll(req, res){
 async function getById(req, res){
     try{
         const items = await controller.getById(req.params.id);
-        res.status(200).json(items);
+        retorno.success(req, res, items, 200);
     }catch(err){
         retorno.error(req, res, err, 500);
     }

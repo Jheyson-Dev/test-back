@@ -14,11 +14,17 @@ module.exports = function (dbInjected) {
     function getById(id) {
         return db.obtenerPorId(tabla, id);
     }
+    // function add(body) {
+    //     return db.agregarConStock(tabla, body);
+    // }
     function add(body) {
-        return db.agregarConStock(tabla, body);
+        return db.agregar(tabla, body);
     }
+    // function update(id, newData) {
+    //     return db.actualizarConStock(tabla, id, newData);
+    // }
     function update(id, newData) {
-        return db.actualizarConStock(tabla, id, newData);
+        return db.actualizar(tabla, id, newData);
     }
     function remove(id) {
         return db.eliminar(tabla, id);
