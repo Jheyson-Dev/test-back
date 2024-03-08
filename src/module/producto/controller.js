@@ -9,10 +9,10 @@ module.exports = function (dbInjected) {
     }
 
     function getAll() {
-        return db.obtenerTodos(tabla);
+        return db.obtenerProductosConDatosCompletos();
     }
     function getById(id) {
-        return db.obtenerPorId(tabla, id);
+        return db.obtenerProductosConDatosCompletosPorId(id);
     }
     function add(body) {
         return db.agregar(tabla, body);

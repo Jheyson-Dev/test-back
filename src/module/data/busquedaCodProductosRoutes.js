@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
             return res.status(400).json({ error: true, message: 'Término de búsqueda no proporcionado' });
         }
     } catch (error) {
-        console.error('Error en la ruta /api/buscar-productos:', error);
+        console.error('Error en la ruta /api/buscar_productos:', error);
         return res.status(500).json({ error: true, message: 'Error interno' });
     }
 });

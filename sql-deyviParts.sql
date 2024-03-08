@@ -38,7 +38,6 @@ CREATE TABLE producto (
                 marca_fabricante VARCHAR(500) NOT NULL,
                 descripcion VARCHAR(500) NOT NULL,
                 multiplos VARCHAR(200) NOT NULL,
-                pc DOUBLE PRECISION NOT NULL,
                 consultas int DEFAULT 0,
                 medida VARCHAR(254) NOT NULL,
                 id_categoria INT NOT NULL,

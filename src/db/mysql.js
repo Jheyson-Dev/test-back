@@ -94,15 +94,12 @@ function actualizar(tabla, id, newData) {
     return new Promise((resolve, reject) => {
         conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], (error, result) => {
             if (error) {
-                // console.error('Error al actualizar:', error);
                 return reject(error);
             }
 
             if (result.affectedRows > 0) {
-                // console.log('Actualización exitosa:', result);
                 resolve(result);
             } else {
-                // console.error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
                 reject(new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`));
             }
         });
@@ -258,7 +255,6 @@ function obtenerProductosConOferta() {
     });
 }
 
-
 async function actualizarNumeroConsulta(idProducto) {
     try {
       const query = `UPDATE producto SET consultas = consultas + 1 WHERE id_producto = ?`;
@@ -269,148 +265,366 @@ async function actualizarNumeroConsulta(idProducto) {
     }
 }
 
+const oPDC = `p.id_producto,
+    p.codigo_OEM,
+    p.codigo_interno,
+    p.codigo_fabricante,
+    p.origen,
+    p.marca_fabricante,
+    p.descripcion,
+    p.multiplos,
+    p.consultas,
+    p.medida,
+    p.precio_compra,
+    p.precio_venta,
+    p.precio_minimo,
+    c.id_categoria,
+    c.nombre_producto,
+    c.campo_medicion,
+    c.url_campo_medicion,
+    c.tipo`;
 
-const commonPart = `
-    p.id_producto,
-    MAX(p.codigo_OEM) AS codigo_OEM,
-    MAX(p.codigo_interno) AS codigo_interno,
-    MAX(p.codigo_fabricante) AS codigo_fabricante,
-    MAX(p.origen) AS origen,
-    MAX(p.marca_fabricante) AS marca_fabricante,
-    MAX(p.descripcion) AS descripcion,
-    MAX(p.multiplos) AS multiplos,
-    MAX(p.precio) AS precio,
-    MAX(p.stock) AS stock,
-    MAX(p.oferta) AS oferta,
-    MAX(p.numero_consulta) AS numero_consulta,
-    MAX(p.medida) AS medida,
-    MAX(p.id_categoria) AS id_categoria,
-    COALESCE(MAX(ip.img_url), '') AS url_imagen_producto,
-    COALESCE(MAX(ma.img_url), '') AS img_url_marca_auto
-`;
-
-
-function getDestacadosByConsulta() {
+function obtenerProductosConDatosCompletos() {
     return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                ${commonPart}
-            FROM producto p
-            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-            LEFT JOIN aplicacion a ON p.id_producto = a.id_producto
-            LEFT JOIN modelo_auto ma ON a.id_modelo_auto = ma.id_modelo_auto
-            GROUP BY p.id_producto
-            ORDER BY MAX(p.numero_consulta) DESC`;
-        conexion.query(query, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
+        conexion.query(`SELECT 
+        ${oPDC},
+        COALESCE((
+            SELECT ma.nombre
+            FROM aplicacion a
+            LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            LEFT JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            WHERE a.id_producto = p.id_producto
+            ORDER BY ma.nombre ASC
+            LIMIT 1
+        ), '') AS nombre_marca,
+        COALESCE((
+            SELECT mo.nombre
+            FROM aplicacion a
+            LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            WHERE a.id_producto = p.id_producto
+            ORDER BY mo.nombre ASC
+            LIMIT 1
+        ), '') AS nombre_modelo,
+        COALESCE((
+            SELECT mo.anio_inicio_termino
+            FROM aplicacion a
+            LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            WHERE a.id_producto = p.id_producto
+            ORDER BY mo.nombre ASC
+            LIMIT 1
+        ), '') AS anio_inicio_termino,
+        COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
+        COALESCE((GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC)), '') AS stock_por_tienda,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_oferta', o.id_oferta, 'descripcion', o.descripcion, 'descuento', o.descuento, 'priorizacion', o.priorizacion)
+                ) 
+            FROM 
+                oferta o 
+            WHERE 
+                o.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS ofertas,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_img_producto', ip.id_img_producto, 'img_url', ip.img_url)
+                ) 
+            FROM 
+                img_producto ip 
+            WHERE 
+                ip.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS imagenes
+    FROM 
+        producto p
+    LEFT JOIN 
+        categoria c ON p.id_categoria = c.id_categoria
+    LEFT JOIN 
+        tienda_producto tp ON p.id_producto = tp.id_producto
+    LEFT JOIN 
+        tienda t ON tp.id_tienda = t.id_tienda
+    GROUP BY 
+        ${oPDC}`,
+        (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
 
-function getOfertas() {
+function obtenerProductosDestacados() {
     return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                ${commonPart}
-            FROM producto p
-            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-            LEFT JOIN aplicacion a ON p.id_producto = a.id_producto
-            LEFT JOIN modelo_auto ma ON a.id_modelo_auto = ma.id_modelo_auto
-            WHERE p.oferta = 'si'
-            GROUP BY p.id_producto`;
-        conexion.query(query, (err, results) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(results);
-            }
+        conexion.query(`SELECT 
+        ${oPDC},
+        COALESCE((
+            SELECT ma.nombre
+            FROM aplicacion a
+            LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            LEFT JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            WHERE a.id_producto = p.id_producto
+            ORDER BY ma.nombre ASC
+            LIMIT 1
+        ), '') AS nombre_marca,
+        COALESCE((
+            SELECT mo.nombre
+            FROM aplicacion a
+            LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            WHERE a.id_producto = p.id_producto
+            ORDER BY mo.nombre ASC
+            LIMIT 1
+        ), '') AS nombre_modelo,
+        COALESCE((
+            SELECT mo.anio_inicio_termino
+            FROM aplicacion a
+            LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            WHERE a.id_producto = p.id_producto
+            ORDER BY mo.nombre ASC
+            LIMIT 1
+        ), '') AS anio_inicio_termino,
+        COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
+        COALESCE((GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC)), '') AS stock_por_tienda,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_oferta', o.id_oferta, 'descripcion', o.descripcion, 'descuento', o.descuento, 'priorizacion', o.priorizacion)
+                ) 
+            FROM 
+                oferta o 
+            WHERE 
+                o.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS ofertas,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_img_producto', ip.id_img_producto, 'img_url', ip.img_url)
+                ) 
+            FROM 
+                img_producto ip 
+            WHERE 
+                ip.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS imagenes
+    FROM 
+        producto p
+    LEFT JOIN 
+        categoria c ON p.id_categoria = c.id_categoria
+    LEFT JOIN 
+        tienda_producto tp ON p.id_producto = tp.id_producto
+    LEFT JOIN 
+        tienda t ON tp.id_tienda = t.id_tienda
+    GROUP BY 
+        ${oPDC}
+    ORDER BY 
+        p.consultas DESC;`,
+        (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
 
-
-
-
-async function getIngresoProductos() {
+function obtenerProductosConDatosCompletosPorId(id) {
     return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-             ${commonPart}
-            FROM
-                producto p
-            JOIN
-                ingreso i ON p.id_producto = i.id_producto
-            LEFT JOIN
-                img_producto ip ON p.id_producto = ip.id_producto
-            JOIN
-                (SELECT id_producto, MAX(fecha_hora) AS ultima_fecha
-                FROM ingreso
-                GROUP BY id_producto) AS ultimos_ingresos
-            ON
-                i.id_producto = ultimos_ingresos.id_producto AND i.fecha_hora = ultimos_ingresos.ultima_fecha
-            JOIN
-                (SELECT id_producto, MAX(id_ingreso) AS ultimo_ingreso
-                FROM ingreso
-                GROUP BY id_producto) AS ultimo_ingreso
-            ON
-                i.id_producto = ultimo_ingreso.id_producto AND i.id_ingreso = ultimo_ingreso.ultimo_ingreso
-            LEFT JOIN
-                aplicacion a ON p.id_producto = a.id_producto
-            LEFT JOIN
-                modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
-            LEFT JOIN
-                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
-            GROUP BY
-                p.id_producto
-            ORDER BY
-                i.fecha_hora DESC, i.id_ingreso DESC;`;
-
-        conexion.query(query, (error, result) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-}
-
-async function buscarProductosPorCodigo(busqueda) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                COALESCE(ma.nombre, '') AS nombre_marca_auto,
-                COALESCE(mo.nombre, '') AS nombre_modelo_auto,
-                COALESCE(mo.anio_inicio, '') AS anio_inicio,
-                COALESCE(mo.anio_termino, '') AS anio_termino,
-                COALESCE(cat.nombre_producto, '') AS nombre_producto,
-                p.*,
-                COALESCE(ip.img_url, '') AS url_imagen_producto
-            FROM
-                producto p
-                LEFT JOIN categoria cat ON p.id_categoria = cat.id_categoria
-                LEFT JOIN aplicacion a ON p.id_producto = a.id_producto
+        conexion.query(`SELECT 
+        p.id_producto,
+        p.codigo_OEM,
+        p.codigo_interno,
+        p.codigo_fabricante,
+        p.origen,
+        p.marca_fabricante,
+        p.descripcion,
+        p.multiplos,
+        p.consultas,
+        p.medida,
+        p.precio_compra,
+        p.precio_venta,
+        p.precio_minimo,
+        c.id_categoria,
+        c.nombre_producto,
+        c.campo_medicion,
+        c.url_campo_medicion,
+        c.tipo,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_oferta', o.id_oferta, 'descripcion', o.descripcion, 'descuento', o.descuento, 'priorizacion', o.priorizacion)
+                ) 
+            FROM 
+                oferta o 
+            WHERE 
+                o.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS ofertas,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_img_producto', ip.id_img_producto, 'img_url', ip.img_url)
+                ) 
+            FROM 
+                img_producto ip 
+            WHERE 
+                ip.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS imagenes,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_tienda', t.id_tienda, 'ruc', t.ruc, 'razon_social', t.razon_social, 'direccion', t.direccion, 'encargado', t.encargado, 'celular', t.celular, 'stock', tp.stock)
+                ) 
+            FROM 
+                tienda_producto tp 
+                LEFT JOIN tienda t ON tp.id_tienda = t.id_tienda
+            WHERE 
+                tp.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS tiendas,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_reemplazo', r.id_reemplazo, 'id_producto', r.id_producto, 'producto_reemplazo', r.producto_reemplazo, 'variacion', r.variacion, 'notas', r.notas)
+                ) 
+            FROM 
+                reemplazo r 
+            WHERE 
+                r.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS reemplazos,
+        COALESCE((
+            SELECT 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT('id_modelo_auto', ma.id_marca_auto, 'nombre_marca', ma.nombre, 'id_modelo_auto', mo.id_modelo_auto, 'nombre_modelo', mo.nombre, 'anio_inicio_termino', mo.anio_inicio_termino, 'motor', mo.motor, 'img_url_modelo_auto', mo.img_url)
+                ) 
+            FROM 
+                aplicacion a 
                 LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
                 LEFT JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
-                LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-            WHERE
-                p.codigo_OEM LIKE ?
-                OR p.codigo_interno LIKE ?
-                OR p.codigo_fabricante LIKE ?
-            ORDER BY
-                NULLIF(ma.nombre, '') IS NULL ASC, ma.nombre ASC,
-                NULLIF(mo.nombre, '') IS NULL ASC, mo.nombre ASC;`;
+            WHERE 
+                a.id_producto = p.id_producto
+        ), JSON_ARRAY()) AS aplicaciones
+    FROM 
+        producto p
+    LEFT JOIN 
+        categoria c ON p.id_categoria = c.id_categoria
+    WHERE
+        p.id_producto = ?`,
+        [id],
+        (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
 
-        conexion.query(query, [`%${busqueda}%`, `%${busqueda}%`, `%${busqueda}%`], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
+
+const iP = `i.id_ingreso,
+i.cantidad,
+i.fecha_hora,
+p.id_producto,
+p.codigo_OEM,
+p.codigo_interno,
+p.codigo_fabricante,
+p.origen,
+p.marca_fabricante,
+p.descripcion,
+p.multiplos,
+p.consultas,
+p.medida,
+p.precio_compra,
+p.precio_venta,
+p.precio_minimo,
+c.nombre_producto`;
+
+function IngresosProductos(){
+    return new Promise((resolve, reject) => {
+        conexion.query(`SELECT 
+        ${iP},
+        COALESCE(JSON_ARRAYAGG(COALESCE(ip.img_url, '')), JSON_ARRAY()) AS imagenes
+    FROM 
+        ingreso i
+    INNER JOIN 
+        producto p ON i.id_producto = p.id_producto
+    INNER JOIN 
+        categoria c ON p.id_categoria = c.id_categoria
+    LEFT JOIN 
+        img_producto ip ON p.id_producto = ip.id_producto
+    GROUP BY 
+        ${iP}
+    ORDER BY SUBSTRING(i.fecha_hora, 1, 10) DESC, SUBSTRING(i.fecha_hora, 12, 8) DESC;`,
+        (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+
+
+
+function buscarProductosPorCodigo(busqueda) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                ${oPDC},
+                COALESCE((
+                    SELECT ma.nombre
+                    FROM aplicacion a
+                    LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                    LEFT JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+                    WHERE a.id_producto = p.id_producto
+                    ORDER BY ma.nombre ASC
+                    LIMIT 1
+                ), '') AS nombre_marca,
+                COALESCE((
+                    SELECT mo.nombre
+                    FROM aplicacion a
+                    LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                    WHERE a.id_producto = p.id_producto
+                    ORDER BY mo.nombre ASC
+                    LIMIT 1
+                ), '') AS nombre_modelo,
+                COALESCE((
+                    SELECT mo.anio_inicio_termino
+                    FROM aplicacion a
+                    LEFT JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                    WHERE a.id_producto = p.id_producto
+                    ORDER BY mo.nombre ASC
+                    LIMIT 1
+                ), '') AS anio_inicio_termino,
+                COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
+                COALESCE((GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC)), '') AS stock_por_tienda,
+                COALESCE((
+                    SELECT 
+                        JSON_ARRAYAGG(
+                            JSON_OBJECT('id_oferta', o.id_oferta, 'descripcion', o.descripcion, 'descuento', o.descuento, 'priorizacion', o.priorizacion)
+                        ) 
+                    FROM 
+                        oferta o 
+                    WHERE 
+                        o.id_producto = p.id_producto
+                ), JSON_ARRAY()) AS ofertas,
+                COALESCE((
+                    SELECT 
+                        JSON_ARRAYAGG(
+                            JSON_OBJECT('id_img_producto', ip.id_img_producto, 'img_url', ip.img_url)
+                        ) 
+                    FROM 
+                        img_producto ip 
+                    WHERE 
+                        ip.id_producto = p.id_producto
+                ), JSON_ARRAY()) AS imagenes
+            FROM 
+                producto p
+            LEFT JOIN 
+                categoria c ON p.id_categoria = c.id_categoria
+            LEFT JOIN 
+                tienda_producto tp ON p.id_producto = tp.id_producto
+            LEFT JOIN 
+                tienda t ON tp.id_tienda = t.id_tienda
+            WHERE
+                p.codigo_OEM LIKE ? OR
+                p.codigo_interno LIKE ? OR
+                p.codigo_fabricante LIKE ?
+            GROUP BY 
+                ${oPDC}`;
+
+        conexion.query(query, [`%${busqueda}%`, `%${busqueda}%`, `%${busqueda}%`], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
@@ -419,361 +633,291 @@ async function buscarProductosPorCodigo(busqueda) {
 async function obtenerModelosPorIdMarca(idMarcaAuto) {
     return new Promise((resolve, reject) => {
         const query = `
-            SELECT
+            SELECT 
                 ma.id_marca_auto,
+                ma.nombre AS nombre_marca,
+                ma.img_url AS img_url_marca,
+                COALESCE(
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_modelo_auto', 
+                            COALESCE(mo.id_modelo_auto, ''),
+                            'nombre_modelo', 
+                            COALESCE(mo.nombre, ''),
+                            'anio_inicio_termino', 
+                            COALESCE(mo.anio_inicio_termino, ''),
+                            'motor', 
+                            COALESCE(mo.motor, ''),
+                            'img_url_modelo', 
+                            COALESCE(mo.img_url, '')
+                        )
+                    ), 
+                    JSON_ARRAY()
+                ) AS modelos_auto
+            FROM 
+                marca_auto ma
+            LEFT JOIN 
+                modelo_auto mo ON ma.id_marca_auto = mo.id_marca_auto
+            WHERE 
+                ma.id_marca_auto = ?
+            GROUP BY 
+                ma.id_marca_auto, ma.nombre, ma.img_url`;
+
+        conexion.query(query, [idMarcaAuto], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+async function obtenerDatosProductoPorIdModelo(idModeloAuto) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                ma.nombre AS nombre_marca,
                 mo.id_modelo_auto,
                 mo.nombre AS nombre_modelo,
-                mo.anio_inicio,
-                mo.anio_termino,
-                mo.img_url AS img_url_modelo,
-                p.*,
-                c.nombre_producto AS nombre_categoria
-            FROM
+                mo.anio_inicio_termino,
+                mo.motor,
+                mo.img_url,
+                COALESCE(
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_producto', p.id_producto,
+                            'codigo_OEM', p.codigo_OEM,
+                            'codigo_interno', p.codigo_interno,
+                            'codigo_fabricante', p.codigo_fabricante,
+                            'origen', p.origen,
+                            'marca_fabricante', p.marca_fabricante,
+                            'descripcion', p.descripcion,
+                            'multiplos', p.multiplos,
+                            'consultas', p.consultas,
+                            'medida', p.medida,
+                            'precio_compra', p.precio_compra,
+                            'precio_venta', p.precio_venta,
+                            'precio_minimo', p.precio_minimo,
+                            'id_categoria', c.id_categoria,
+                            'nombre_producto', c.nombre_producto,
+                            'total_stock', COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), ''),
+                            'stock_por_tienda', COALESCE((SELECT GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC) FROM tienda_producto tp INNER JOIN tienda t ON tp.id_tienda = t.id_tienda WHERE tp.id_producto = p.id_producto GROUP BY tp.id_producto), ''),
+                            'imagenes', (
+                                SELECT JSON_ARRAYAGG(COALESCE(img_url, '')) 
+                                FROM img_producto 
+                                WHERE id_producto = p.id_producto
+                            )
+                        )
+                    ), 
+                    JSON_ARRAY()
+                ) AS productos
+            FROM 
                 modelo_auto mo
-                INNER JOIN aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
-                INNER JOIN producto p ON a.id_producto = p.id_producto
-                INNER JOIN categoria c ON p.id_categoria = c.id_categoria
-                INNER JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
-            WHERE
-                ma.id_marca_auto = ?
-            ORDER BY
-                ma.nombre, mo.nombre;`;
-
-        conexion.query(query, [idMarcaAuto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-
-
-
-
-
-async function obtenerProductoPorId(idProducto) {
-    return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM producto WHERE id_producto = ?';
-        conexion.query(query, [idProducto], (error, resultado) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultado[0]);
-            }
-        });
-    });
-}
-
-
-async function obtenerCategoriaProducto(idCategoria) {
-    return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM categoria WHERE id_categoria = ?';
-        conexion.query(query, [idCategoria], (error, resultado) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultado[0]);
-            }
-        });
-    });
-}
-
-
-async function obtenerReemplazosProducto(idProducto) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT 
-                r.*, 
-                p.*, 
-                c.nombre_producto AS nombre 
-            FROM 
-                reemplazo r
-                JOIN producto p ON r.producto_reemplazo = p.id_producto
-                JOIN categoria c ON p.id_categoria = c.id_categoria
+            LEFT JOIN 
+                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            LEFT JOIN 
+                aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
+            LEFT JOIN 
+                producto p ON a.id_producto = p.id_producto
+            LEFT JOIN 
+                categoria c ON p.id_categoria = c.id_categoria
             WHERE 
-                r.id_producto = ?`;
-        conexion.query(query, [idProducto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
+                mo.id_modelo_auto = ?
+            GROUP BY 
+                mo.id_modelo_auto;
+        `;
+
+        conexion.query(query, [idModeloAuto], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
 
 
-async function obtenerImagenesProducto(idProducto) {
-    return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM img_producto WHERE id_producto = ?';
-        conexion.query(query, [idProducto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-async function obtenerAplicacionesProducto(idProducto) {
+async function obtenerDatosProductoPorIdCategoria(idCategoria) {
     return new Promise((resolve, reject) => {
         const query = `
             SELECT 
-                a.*, 
-                ma.nombre AS nombre_marca_auto, 
-                mo.nombre AS nombre_modelo_auto,
-                mo.anio_inicio,
-                mo.anio_termino
-            FROM 
-                aplicacion a
-                JOIN modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
-                JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
-            WHERE 
-                a.id_producto = ?`;
-        conexion.query(query, [idProducto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-
-
-
-const productoConNombre = `SELECT p.*, c.id_categoria, c.nombre_producto,
-    GROUP_CONCAT(ip.img_url) AS imagenes
-FROM producto p
-INNER JOIN categoria c ON p.id_categoria = c.id_categoria
-LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-GROUP BY p.id_producto`;
-
-async function obtenerProductosConCategoria() {
-    const query = `${productoConNombre}`;
-    return new Promise((resolve, reject) => {
-        conexion.query(query, (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-async function obtenerProductoConCategoriaPorId(idProducto) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT p.*, c.id_categoria, c.nombre_producto, GROUP_CONCAT(ip.img_url) AS imagenes
-            FROM producto p
-            INNER JOIN categoria c ON p.id_categoria = c.id_categoria
-            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-            WHERE p.id_producto = ?
-            GROUP BY p.id_producto`;
-
-        conexion.query(query, [idProducto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-const imagenesCodigoInterno=  `SELECT ip.*, p.id_producto, p.codigo_interno
-FROM img_producto ip
-INNER JOIN producto p ON ip.id_producto = p.id_producto`;
-
-async function obtenerImagenesConCodigoInterno() {
-    const query = imagenesCodigoInterno;    
-    return new Promise((resolve, reject) => {
-        conexion.query(query, (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-async function obtenerImagenesConCInternoPorId(idImg) {
-    return new Promise((resolve, reject) => {
-        const query = `${imagenesCodigoInterno}
-            WHERE ip.id_img_producto = ?`;
-
-        conexion.query(query, [idImg], (error, resultados) => {
-    if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-const reemplazosCodigoInterno = `SELECT r.*, p.codigo_interno AS codigo_interno_original, p2.codigo_interno AS codigo_interno_reemplazo
-FROM reemplazo r
-INNER JOIN producto p ON r.id_producto = p.id_producto
-INNER JOIN producto p2 ON r.producto_reemplazo = p2.id_producto`;
-
-async function obtenerTodosReemplazos() {
-    const query = reemplazosCodigoInterno;    
-    return new Promise((resolve, reject) => {
-        conexion.query(query, (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-async function obtenerReemplazoPorId(idReemplazo) {
-    const query = `${reemplazosCodigoInterno}
-        WHERE r.id_reemplazo = ?`;
-    
-    return new Promise((resolve, reject) => {
-        conexion.query(query, [idReemplazo], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados[0]);
-            }
-        });
-    });
-}
-
-const aplicacionCodigoModelo = `SELECT a.*, p.codigo_interno, m.nombre AS nombre_modelo_auto
-FROM aplicacion a
-INNER JOIN producto p ON a.id_producto = p.id_producto
-INNER JOIN modelo_auto m ON a.id_modelo_auto = m.id_modelo_auto`
-
-async function obtenerTodasAplicaciones() {
-    const query = aplicacionCodigoModelo;
-    
-    return new Promise((resolve, reject) => {
-        conexion.query(query, (error, resultados) => {
-
-    if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-async function obtenerAplicacionPorId(idAplicacion) {
-    const query = `${aplicacionCodigoModelo}
-        WHERE a.id_aplicacion = ?`;
-
-    return new Promise((resolve, reject) => {
-        conexion.query(query, [idAplicacion], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados[0]);
-            }
-        });
-    });
-}
-
-const modelo_marca = `SELECT ma.nombre AS nombre_marca, mo.*
-FROM modelo_auto mo
-INNER JOIN marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto`;
-
-async function obtenerModeloAutoConMarca() {
-    const query = modelo_marca;
-    return new Promise((resolve, reject) => {
-        conexion.query(query, (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
-        });
-    });
-}
-
-async function obtenerModeloAutoPorId(idModeloAuto) {
-    return new Promise((resolve, reject) => {
-        const query = `${modelo_marca}
-            WHERE mo.id_modelo_auto = ?`;
-
-        conexion.query(query, [idModeloAuto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados[0]);
-            }
-        });
-    });
-}
-
-async function obtenerProductosConImagenesYCategoriaPorIDCategoria(idCategoria) {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT 
-                c.*,
-                p.*,
-                GROUP_CONCAT(ip.img_url) AS imagenes
+                c.id_categoria,
+                c.nombre_producto AS nombre_categoria,
+                c.campo_medicion,
+                c.url_campo_medicion,
+                c.tipo,
+                COALESCE(
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_producto', p.id_producto,
+                            'codigo_OEM', p.codigo_OEM,
+                            'codigo_interno', p.codigo_interno,
+                            'codigo_fabricante', p.codigo_fabricante,
+                            'origen', p.origen,
+                            'marca_fabricante', p.marca_fabricante,
+                            'descripcion', p.descripcion,
+                            'multiplos', p.multiplos,
+                            'consultas', p.consultas,
+                            'medida', p.medida,
+                            'precio_compra', p.precio_compra,
+                            'precio_venta', p.precio_venta,
+                            'precio_minimo', p.precio_minimo,
+                            'id_marca_auto', ma.id_marca_auto,
+                            'marca_auto', ma.nombre,
+                            'id_modelo_auto', mo.id_modelo_auto,
+                            'modelo_auto', mo.nombre,
+                            'anio_inicio_termino', mo.anio_inicio_termino,
+                            'total_stock', COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), ''),
+                            'stock_por_tienda', COALESCE((SELECT GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC) FROM tienda_producto tp INNER JOIN tienda t ON tp.id_tienda = t.id_tienda WHERE tp.id_producto = p.id_producto GROUP BY tp.id_producto), ''),
+                            'imagenes', (
+                                SELECT JSON_ARRAYAGG(COALESCE(img_url, '')) 
+                                FROM img_producto 
+                                WHERE id_producto = p.id_producto
+                            )
+                        )
+                    ), 
+                    JSON_ARRAY()
+                ) AS productos
             FROM 
                 categoria c
-                INNER JOIN producto p ON c.id_categoria = p.id_categoria
-                LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
+            LEFT JOIN 
+                producto p ON c.id_categoria = p.id_categoria
+            LEFT JOIN 
+                aplicacion a ON p.id_producto = a.id_producto
+            LEFT JOIN 
+                modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            LEFT JOIN 
+                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
             WHERE 
                 c.id_categoria = ?
             GROUP BY 
-                p.id_producto`;
+                c.id_categoria, c.nombre_producto;
+        `;
 
-        conexion.query(query, [idCategoria], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
+        conexion.query(query, [idCategoria], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
 
 
-async function obtenerModeloAutoYProductosConImagenesPorIDModelo(idModeloAuto) {
+
+async function obtenerDatosProductoPorIdTienda(idTienda) {
     return new Promise((resolve, reject) => {
         const query = `
         SELECT 
-            ma.*,
-            marca.nombre AS nombre_marca_auto,
-            p.*,
-            c.nombre_producto AS nombre_producto_categoria,
-            GROUP_CONCAT(ip.img_url) AS imagenes
+    t.id_tienda,
+    t.ruc,
+    t.razon_social AS nombre_tienda,
+    t.direccion,
+    t.encargado,
+    t.celular,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id_producto', p.id_producto,
+            'codigo_OEM', p.codigo_OEM,
+            'codigo_interno', p.codigo_interno,
+            'codigo_fabricante', p.codigo_fabricante,
+            'origen', p.origen,
+            'marca_fabricante', p.marca_fabricante,
+            'descripcion', p.descripcion,
+            'multiplos', p.multiplos,
+            'consultas', p.consultas,
+            'medida', p.medida,
+            'precio_compra', p.precio_compra,
+            'precio_venta', p.precio_venta,
+            'precio_minimo', p.precio_minimo,
+            'id_categoria', c.id_categoria,
+            'nombre_categoria', c.nombre_producto,
+            'stock', tp.stock,
+            'imagenes', (
+                SELECT JSON_ARRAYAGG(COALESCE(img_url, '')) 
+                FROM img_producto 
+                WHERE id_producto = p.id_producto
+            ),
+            'nombre_marca', (
+                SELECT 
+                    nombre
+                FROM 
+                    (
+                        SELECT 
+                            ma.nombre,
+                            ROW_NUMBER() OVER (ORDER BY ma.nombre) AS rn
+                        FROM 
+                            aplicacion a
+                        LEFT JOIN 
+                            modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                        LEFT JOIN 
+                            marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+                        WHERE 
+                            a.id_producto = p.id_producto
+                        GROUP BY 
+                            ma.nombre
+                    ) AS sub
+                WHERE 
+                    rn = 1
+            ),
+            'nombre_modelo', (
+                SELECT 
+                    nombre
+                FROM 
+                    (
+                        SELECT 
+                            mo.nombre,
+                            ROW_NUMBER() OVER (ORDER BY mo.nombre) AS rn
+                        FROM 
+                            aplicacion a
+                        LEFT JOIN 
+                            modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                        WHERE 
+                            a.id_producto = p.id_producto
+                        GROUP BY 
+                            mo.nombre
+                    ) AS sub
+                WHERE 
+                    rn = 1
+            ),
+            'anio_inicio_termino', (
+                SELECT 
+                    mo.anio_inicio_termino
+                FROM 
+                    aplicacion a
+                LEFT JOIN 
+                    modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+                WHERE 
+                    a.id_producto = p.id_producto
+                LIMIT 1
+            )
+        )
+    ) AS productos
+FROM 
+    tienda t
+LEFT JOIN 
+    (
+        SELECT 
+            id_tienda,
+            id_producto,
+            SUM(stock) AS stock
         FROM 
-            modelo_auto ma
-            LEFT JOIN aplicacion a ON ma.id_modelo_auto = a.id_modelo_auto
-            LEFT JOIN producto p ON a.id_producto = p.id_producto
-            LEFT JOIN categoria c ON p.id_categoria = c.id_categoria
-            LEFT JOIN img_producto ip ON p.id_producto = ip.id_producto
-            LEFT JOIN marca_auto marca ON ma.id_marca_auto = marca.id_marca_auto
-        WHERE 
-            ma.id_modelo_auto = ?
+            tienda_producto
         GROUP BY 
-            p.id_producto;`;
+            id_tienda,
+            id_producto
+    ) tp ON t.id_tienda = tp.id_tienda
+LEFT JOIN 
+    producto p ON tp.id_producto = p.id_producto
+LEFT JOIN 
+    categoria c ON p.id_categoria = c.id_categoria
+WHERE 
+    t.id_tienda = ?
+GROUP BY 
+    t.id_tienda;
+        `;
 
-        conexion.query(query, [idModeloAuto], (error, resultados) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(resultados);
-            }
+        conexion.query(query, [idTienda], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
+
 
 
 module.exports = {
@@ -785,33 +929,17 @@ module.exports = {
     actualizar,
     // actualizarConStock,
     eliminar,
+
     obtenerProductosConPriorizacionSI,
     obtenerProductosConOferta,
     actualizarNumeroConsulta,
-
-
-
-    
-    getDestacadosByConsulta,
-    getOfertas,
-    getIngresoProductos,
+    obtenerProductosConDatosCompletos,
+    obtenerProductosConDatosCompletosPorId,
+    IngresosProductos,
+    obtenerProductosDestacados, 
     buscarProductosPorCodigo,
     obtenerModelosPorIdMarca,
-    obtenerProductoPorId,
-    obtenerCategoriaProducto,
-    obtenerReemplazosProducto,
-    obtenerImagenesProducto,
-    obtenerAplicacionesProducto,
-    obtenerProductosConCategoria,
-    obtenerProductoConCategoriaPorId,
-    obtenerImagenesConCodigoInterno,
-    obtenerImagenesConCInternoPorId,
-    obtenerTodosReemplazos,
-    obtenerReemplazoPorId,
-    obtenerTodasAplicaciones,
-    obtenerAplicacionPorId,
-    obtenerModeloAutoConMarca,
-    obtenerModeloAutoPorId,
-    obtenerProductosConImagenesYCategoriaPorIDCategoria,
-    obtenerModeloAutoYProductosConImagenesPorIDModelo
+    obtenerDatosProductoPorIdModelo,
+    obtenerDatosProductoPorIdCategoria,
+    obtenerDatosProductoPorIdTienda
 }

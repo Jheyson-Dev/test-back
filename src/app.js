@@ -13,7 +13,6 @@ const aplicaciones = require('./module/aplicacion/routes');
 const imgProducto = require('./module/imgProducto/routes');
 const oferta = require('./module/oferta/routes');
 const reemplazos = require('./module/reemplazo/routes');
-
 const tienda = require('./module/tienda/routes');
 const tiendaUsuario = require('./module/tiendaUsuario/routes');
 const tiendaProducto = require('./module/tiendaProducto/routes');
@@ -25,12 +24,9 @@ const pedido = require('./module/pedido/routes');
 const traspaso = require('./module/traspaso/routes');
 
 const dataPriorizadas = require('./module/data/dataProductosOfertasPriorizadasRoutes');
-
 const dataDestacados = require('./module/data/dataProductosDestacadosRoutes');
 const dataIngresos = require('./module/data/dataProductosIngresadosRoutes');
 const dataBusqueda = require('./module/data/busquedaCodProductosRoutes');
-const dataMM = require('./module/data/dataMarcaModelosRoutes');
-const dataProductos = require('./module/data/dataProductosCompletoRoutes');
 
 
 
@@ -50,12 +46,12 @@ app.set('port', config.app.port);
 //rutas
 app.use('/api/auth', authRoutes); 
 app.use('/api/usuarios', usuarios);
-app.use('/api/marca-autos', marcaAuto);
-app.use('/api/modelo-autos', modeloAuto);
+app.use('/api/marca_autos', marcaAuto);
+app.use('/api/modelo_autos', modeloAuto);
 app.use('/api/categorias', categorias);
 app.use('/api/productos', productos);
 app.use('/api/aplicaciones', aplicaciones);
-app.use('/api/img-productos', imgProducto);
+app.use('/api/img_productos', imgProducto);
 app.use('/api/ofertas', oferta);
 app.use('/api/reemplazos', reemplazos);
 app.use('/api/tiendas', tienda);
@@ -70,13 +66,9 @@ app.use('/api/pedidos', pedido);
 app.use('/api/traspasos', traspaso);
 
 app.use('/api/priorizadas', dataPriorizadas);
-
 app.use('/api/destacados', dataDestacados);
-
 app.use('/api/p_ingresos', dataIngresos);
-app.use('/api/buscar-productos', dataBusqueda);
-app.use('/api/modelos_marca', dataMM);
-app.use('/api/productos_c', dataProductos);
+app.use('/api/buscar_productos', dataBusqueda);
 
 
 

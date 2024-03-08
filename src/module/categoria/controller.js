@@ -12,7 +12,7 @@ module.exports = function (dbInjected) {
         return db.obtenerTodos(tabla);
     }
     function getById(id) {
-        return db.obtenerPorId(tabla, id);
+        return db.obtenerDatosProductoPorIdCategoria(id);
     }
     function add(body) {
         return db.agregar(tabla, body);
