@@ -14,17 +14,19 @@ module.exports = function (dbInjected) {
     function getById(id) {
         return db.obtenerPorId(tabla, id);
     }
-    // function add(body) {
-    //     return db.agregarConStock(tabla, body);
-    // }
-    function add(body) {
-        return db.agregar(tabla, body);
+    async function add(body) {
+        try {
+            const nuevoRegistro = body;
+            const resultado = await db.agregar(tabla, nuevoRegistro);
+            await db.actualizarStockAdd(nuevoRegistro.id_tienda_producto, nuevoRegistro.cantidad);
+
+            return resultado;
+        } catch (error) {
+            throw error;
+        }
     }
-    // function update(id, newData) {
-    //     return db.actualizarConStock(tabla, id, newData);
-    // }
     function update(id, newData) {
-        return db.actualizar(tabla, id, newData);
+        return db.actualizarConStock(tabla, id, newData);
     }
     function remove(id) {
         return db.eliminar(tabla, id);

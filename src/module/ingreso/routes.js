@@ -46,7 +46,7 @@ async function update(req, res, next) {
     try {
         const id = req.params.id;
         const datosActualizados = req.body;
-        const resultado = await controller.update(id, datosActualizados);
+        await controller.update(id, datosActualizados);
         retorno.success(req, res, 'Registro actualizado exitosamente', 200);
     } catch (err) {
         next(err);

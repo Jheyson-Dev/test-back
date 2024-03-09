@@ -120,7 +120,6 @@ CREATE TABLE ingreso (
                 id_ingreso INT AUTO_INCREMENT NOT NULL,
                 cantidad INT NOT NULL,
                 fecha_hora VARCHAR(100) NOT NULL,
-                id_producto INT NOT NULL,
                 id_tienda_producto INT NOT NULL,
                 PRIMARY KEY (id_ingreso)
 );
@@ -243,12 +242,6 @@ ON UPDATE CASCADE;
 ALTER TABLE tienda_producto ADD CONSTRAINT tienda_tienda_producto_fk
 FOREIGN KEY (id_tienda)
 REFERENCES tienda (id_tienda)
-ON DELETE CASCADE
-ON UPDATE CASCADE;
-
-ALTER TABLE ingreso ADD CONSTRAINT producto_ingreso_fk
-FOREIGN KEY (id_producto)
-REFERENCES producto (id_producto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
