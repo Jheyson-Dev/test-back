@@ -8,8 +8,7 @@ const router = express.Router();
 router.get('/', getAll);
 router.get('/:id', getById);
 router.post('/', add);
-router.put('/:id', update); 
-router.delete('/:id', remove);
+router.put('/:id', update);
 
 
 
@@ -48,16 +47,6 @@ async function update(req, res, next) {
         const datosActualizados = req.body;
         await controller.update(id, datosActualizados);
         retorno.success(req, res, 'Registro actualizado exitosamente', 200);
-    } catch (err) {
-        next(err);
-    }
-}
-
-async function remove(req, res, next) {
-    try {
-        const id = req.params.id;
-        const items = await controller.remove(id);
-        retorno.success(req, res, 'Eliminado exitosamente', 200);
     } catch (err) {
         next(err);
     }

@@ -33,7 +33,7 @@ CREATE TABLE `aplicacion` (
   KEY `producto_aplicacion_fk` (`id_producto`),
   CONSTRAINT `modelo_auto_aplicacion_fk` FOREIGN KEY (`id_modelo_auto`) REFERENCES `modelo_auto` (`id_modelo_auto`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `producto_aplicacion_fk` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -42,7 +42,7 @@ CREATE TABLE `aplicacion` (
 
 LOCK TABLES `aplicacion` WRITE;
 /*!40000 ALTER TABLE `aplicacion` DISABLE KEYS */;
-INSERT INTO `aplicacion` VALUES (1,1,2),(2,1,1);
+INSERT INTO `aplicacion` VALUES (1,1,2),(2,1,1),(3,3,2),(4,2,1);
 /*!40000 ALTER TABLE `aplicacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -59,7 +59,7 @@ CREATE TABLE `auto` (
   `serie_vin` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `img_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_auto`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +68,6 @@ CREATE TABLE `auto` (
 
 LOCK TABLES `auto` WRITE;
 /*!40000 ALTER TABLE `auto` DISABLE KEYS */;
-INSERT INTO `auto` VALUES (1,'zktst3T2','Ser4578','https://hyundai.pe/wp-content/uploads/2023/11/model-the-all-new-accent.webp'),(2,'13ZF43T2','Ser2112','https://hyundai.pe/wp-content/uploads/2023/08/i10Sedan-calada-468x260-1.png');
 /*!40000 ALTER TABLE `auto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -115,7 +114,7 @@ CREATE TABLE `compra` (
   `img_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_compra`),
   CONSTRAINT `compra_chk_1` CHECK ((`estado` in (1,0)))
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -124,7 +123,6 @@ CREATE TABLE `compra` (
 
 LOCK TABLES `compra` WRITE;
 /*!40000 ALTER TABLE `compra` DISABLE KEYS */;
-INSERT INTO `compra` VALUES (1,'13-2024-14t','Repuestos Sac','2018-07-17 - 2026-07-17','1','https://www.aisin.com.sg/wp-content/uploads/2021/08/Art-Piston.png'),(2,'12-2024-14t','Repuestos Sac','2018-07-17 - 2026-07-17','1','https://scdn.autodoc.de/catalog/categories/600x600/10629.png');
 /*!40000 ALTER TABLE `compra` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -142,7 +140,7 @@ CREATE TABLE `img_producto` (
   PRIMARY KEY (`id_img_producto`),
   KEY `producto_img_producto_fk` (`id_producto`),
   CONSTRAINT `producto_img_producto_fk` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,7 +149,7 @@ CREATE TABLE `img_producto` (
 
 LOCK TABLES `img_producto` WRITE;
 /*!40000 ALTER TABLE `img_producto` DISABLE KEYS */;
-INSERT INTO `img_producto` VALUES (1,1,'https://b2b.refax.pe:9043/MARCASDEVEHICULOS/imagennodisponible.png'),(2,2,'https://b2b.refax.pe:9043/FOTOGRAFIAS/P018821/P018821A.jpg');
+INSERT INTO `img_producto` VALUES (1,1,'https://b2b.refax.pe:9043/MARCASDEVEHICULOS/imagennodisponible.png'),(2,2,'https://b2b.refax.pe:9043/FOTOGRAFIAS/P018821/P018821A.jpg'),(3,2,'https://b2b.refax.pe:9043/FOTOGRAFIAS/P018821/P018821B.jpg');
 /*!40000 ALTER TABLE `img_producto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -166,14 +164,11 @@ CREATE TABLE `ingreso` (
   `id_ingreso` int NOT NULL AUTO_INCREMENT,
   `cantidad` int NOT NULL,
   `fecha_hora` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `id_producto` int NOT NULL,
   `id_tienda_producto` int NOT NULL,
   PRIMARY KEY (`id_ingreso`),
-  KEY `producto_ingreso_fk` (`id_producto`),
   KEY `tienda_producto_ingreso_fk` (`id_tienda_producto`),
-  CONSTRAINT `producto_ingreso_fk` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `tienda_producto_ingreso_fk` FOREIGN KEY (`id_tienda_producto`) REFERENCES `tienda_producto` (`id_tienda_producto`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -182,7 +177,7 @@ CREATE TABLE `ingreso` (
 
 LOCK TABLES `ingreso` WRITE;
 /*!40000 ALTER TABLE `ingreso` DISABLE KEYS */;
-INSERT INTO `ingreso` VALUES (1,7,'2024-03-06T12:00:00',1,1),(2,9,'2024-03-06T12:00:00',1,1);
+INSERT INTO `ingreso` VALUES (1,3,'2024-01-03T21:10:00',1),(2,2,'2024-02-04T10:15:00',1),(3,0,'2024-01-03T21:10:00',2),(4,5,'2024-02-04T10:15:00',3),(5,7,'2024-03-08T21:10:10',4),(6,5,'2024-03-08T22:15:00',5),(8,5,'2024-02-08T22:15:00',7),(9,1,'2024-01-08T09:45:00',4);
 /*!40000 ALTER TABLE `ingreso` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -267,7 +262,7 @@ CREATE TABLE `oferta` (
 
 LOCK TABLES `oferta` WRITE;
 /*!40000 ALTER TABLE `oferta` DISABLE KEYS */;
-INSERT INTO `oferta` VALUES (1,2,'Oferta de Año Nuevo','no',2.99),(2,2,'Oferta de Año Nuevo','si',5.99);
+INSERT INTO `oferta` VALUES (1,1,'Oferta de Navidad','no',2.99),(2,2,'Oferta de Año Nuevo','si',5.99);
 /*!40000 ALTER TABLE `oferta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -285,7 +280,7 @@ CREATE TABLE `pedido` (
   `cantidad` int DEFAULT NULL,
   `img_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_pedido`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -294,7 +289,6 @@ CREATE TABLE `pedido` (
 
 LOCK TABLES `pedido` WRITE;
 /*!40000 ALTER TABLE `pedido` DISABLE KEYS */;
-INSERT INTO `pedido` VALUES (1,'piston','14 x 19',20,'https://www.ritsukaparts.com/en/wp-content/uploads/2018/09/piston-kit-250x250-1-350x350.png'),(2,'piston','14 x 19',20,'https://scdn.autodoc.de/catalog/categories/600x600/10629.png');
 /*!40000 ALTER TABLE `pedido` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -314,7 +308,6 @@ CREATE TABLE `producto` (
   `marca_fabricante` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   `descripcion` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   `multiplos` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `pc` double NOT NULL,
   `consultas` int DEFAULT '0',
   `medida` varchar(254) COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_categoria` int NOT NULL,
@@ -324,7 +317,7 @@ CREATE TABLE `producto` (
   PRIMARY KEY (`id_producto`),
   KEY `categoria_produco_fk` (`id_categoria`),
   CONSTRAINT `categoria_produco_fk` FOREIGN KEY (`id_categoria`) REFERENCES `categoria` (`id_categoria`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -333,7 +326,7 @@ CREATE TABLE `producto` (
 
 LOCK TABLES `producto` WRITE;
 /*!40000 ALTER TABLE `producto` DISABLE KEYS */;
-INSERT INTO `producto` VALUES (1,'1221m212-a','9961171','43434343k3-21','CHINA','DCROER','00 VOLTS CO AMPERES POLEA OPK','no se que va aqui',106.5,0,'155 X 179',1,106.5,116,114.5),(2,'232343-3243232-a','0009553','2132-2121-121-21','MULTI-ORIGEN','STP','LARGO 7E.OOMV1 DIAMETRO 80.00MM HILO 20.COMM W818/8 STP 10588','no se que va aqui',106.5,0,'14 X 16',2,106.5,115,113.5);
+INSERT INTO `producto` VALUES (1,'1221m212-a','9961171','43434343k3-21','CHINA','DCROER','00 VOLTS CO AMPERES POLEA OPK','no se que va aqui',8,'155 X 179',1,106.5,116,114.5),(2,'232343-3243232-a','0009553','2132-2121-121-21','MULTI-ORIGEN','STP','LARGO 7E.OOMV1 DIAMETRO 80.00MM HILO 20.COMM W818/8 STP 10588','no se que va aqui',9,'14 X 16',2,106.5,115,113.5),(3,'9382823-3243232-a','0309753','82142-2121-121-21','MULTI-ORIGEN','STP','LARGO 7E.OOMV1 DIAMETRO 80.00MM HILO 20.COMM W818/8 STP 10588','no se que va aqui',3,'15 X 16',2,102.5,117,110),(4,'b943js-asa','0233456','02142-66521-011-54','MULTI-ORIGEN','STP','HILO 20.COMM W818/8 STP 10588','no se que va aqui',0,'18 X 6',1,79.5,100,90);
 /*!40000 ALTER TABLE `producto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -352,7 +345,7 @@ CREATE TABLE `reduccion_inventario` (
   `usuario` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `fecha_hora` datetime NOT NULL,
   PRIMARY KEY (`id_reduccion_inventario`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -361,7 +354,6 @@ CREATE TABLE `reduccion_inventario` (
 
 LOCK TABLES `reduccion_inventario` WRITE;
 /*!40000 ALTER TABLE `reduccion_inventario` DISABLE KEYS */;
-INSERT INTO `reduccion_inventario` VALUES (1,'9961171','1',3,'1','2024-03-06 07:00:00'),(2,'9961171','1',2,'1','2024-03-06 12:00:00');
 /*!40000 ALTER TABLE `reduccion_inventario` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -420,7 +412,7 @@ CREATE TABLE `tienda` (
 
 LOCK TABLES `tienda` WRITE;
 /*!40000 ALTER TABLE `tienda` DISABLE KEYS */;
-INSERT INTO `tienda` VALUES (1,'20600434668','deybi parts sac','Jr. Ayacucho N° 5654','Ronald Calla','966554331'),(2,'20600434668','deybi parts sac','Jr. La mar n° 456','Janeth R.','966554332');
+INSERT INTO `tienda` VALUES (1,'20600434668','deybi parts sac 1','Jr. Ayacucho N° 5654','Ronald Calla','966554331'),(2,'20600434668','deybi parts sac','Jr. La mar n° 456','Janeth R.','966554332');
 /*!40000 ALTER TABLE `tienda` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -441,7 +433,7 @@ CREATE TABLE `tienda_producto` (
   KEY `tienda_tienda_producto_fk` (`id_tienda`),
   CONSTRAINT `producto_tienda_producto_fk` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `tienda_tienda_producto_fk` FOREIGN KEY (`id_tienda`) REFERENCES `tienda` (`id_tienda`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -450,7 +442,7 @@ CREATE TABLE `tienda_producto` (
 
 LOCK TABLES `tienda_producto` WRITE;
 /*!40000 ALTER TABLE `tienda_producto` DISABLE KEYS */;
-INSERT INTO `tienda_producto` VALUES (1,2,1,4),(2,1,1,5);
+INSERT INTO `tienda_producto` VALUES (1,2,1,30),(2,1,1,20),(3,1,2,15),(4,3,2,30),(5,4,2,40),(7,4,1,25);
 /*!40000 ALTER TABLE `tienda_producto` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -499,7 +491,7 @@ CREATE TABLE `traspaso` (
   `tienda_origen` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `tienda_destino` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_traspaso`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -508,7 +500,6 @@ CREATE TABLE `traspaso` (
 
 LOCK TABLES `traspaso` WRITE;
 /*!40000 ALTER TABLE `traspaso` DISABLE KEYS */;
-INSERT INTO `traspaso` VALUES (1,'0009553',1,'1','2024-03-06T09:00:00','2','1'),(2,'0009553',3,'1','2024-03-06T12:00:00','2','1');
 /*!40000 ALTER TABLE `traspaso` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -535,7 +526,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (1,'trabajador1','$2b$10$cNYw0o0Ba2m.DYqFGTNC0uLMyn76LR1t75Qmm5eEOcbYNj68fE3Q6','trabajador'),(2,'adminDM','$2b$10$JRxBRfc0/6CJaMnwruvHqO3IpfCccb.FfROsmgdsjzQRo3GDGcnrC','administrador');
+INSERT INTO `usuario` VALUES (1,'trabajador1','$2b$10$O9gCeNPcJ0aKfBy8i0eaJuLW01pA8tku9NHJ/wRma7lT4oOE0Ja/.','trabajador'),(2,'adminDM','$2b$10$Nk4C73OwGZY5IvKe4YLq2.Of9j1GeiVVROYlOephTsGaavugj2FCO','administrador');
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -548,4 +539,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-03-06 23:17:41
+-- Dump completed on 2024-03-08 19:32:18

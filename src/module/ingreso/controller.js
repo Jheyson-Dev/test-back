@@ -28,16 +28,12 @@ module.exports = function (dbInjected) {
     function update(id, newData) {
         return db.actualizarConStock(tabla, id, newData);
     }
-    function remove(id) {
-        return db.eliminar(tabla, id);
-    }
-
+    
     return{
         getAll,
         getById,
         add,
-        update,
-        remove
+        update
     }
     
 }
