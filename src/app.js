@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require('morgan')
 const cors = require('cors');
 const config = require('./config');
+const upload = require('./middleware/multerConfig');
 
 const authRoutes = require('./module/auth/routes');
 const usuarios = require('./module/usuario/routes');
@@ -27,8 +28,6 @@ const dataPriorizadas = require('./module/data/dataProductosOfertasPriorizadasRo
 const dataDestacados = require('./module/data/dataProductosDestacadosRoutes');
 const dataIngresos = require('./module/data/dataProductosIngresadosRoutes');
 const dataBusqueda = require('./module/data/busquedaCodProductosRoutes');
-
-
 
 const errors = require('./red/errors');
 
