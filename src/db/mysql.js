@@ -914,6 +914,65 @@ async function sumarStockProducto(id_tienda_producto, cantidad) {
     });
 }
 
+const TABLE_PRODUCTO = 'producto';
+
+function agregarProducto(producto) {
+    return new Promise((resolve, reject) => {
+        // Contar la cantidad de registros existentes en la tabla producto
+        conexion.query(`SELECT COUNT(*) AS total FROM ${TABLE_PRODUCTO}`, (error, results) => {
+            if (error) {
+                return reject(error);
+            }
+
+            let ultimoNumero = results[0].total + 1; // Obtener el siguiente número en base a la cantidad de registros
+            const codigoInterno = generarCodigoInterno(ultimoNumero);
+            const newData = {
+                ...producto,
+                codigo_interno: codigoInterno
+            };
+
+            // Insertar el nuevo producto con el código interno generado
+            conexion.query(`INSERT INTO ${TABLE_PRODUCTO} SET ?`, newData, (error, result) => {
+                if (error) {
+                    console.error('Error al insertar:', error);
+                    return reject(error);
+                }
+                console.log('Inserción exitosa:', result);
+                resolve(result);
+            });
+        });
+    });
+}
+
+function generarCodigoInterno(ultimoNumero) {
+    const year = new Date().getFullYear(); // Año actual
+    return `DE-PA-${year}-P${pad(ultimoNumero, 4)}`;
+}
+
+function pad(number, length) {
+    return ('0000' + number).slice(-length);
+}
+
+function actualizarProducto(id, newData) {
+    return new Promise((resolve, reject) => {
+        // Eliminar el campo codigo_interno del objeto newData
+        delete newData.codigo_interno;
+
+        conexion.query(`UPDATE ${TABLE_PRODUCTO} SET ? WHERE id_producto = ?`, [newData, id], (error, result) => {
+            if (error) {
+                console.error('Error al actualizar:', error);
+                return reject(error);
+            }
+
+            if (result.affectedRows > 0) {
+                resolve(result);
+            } else {
+                reject(new Error(`No se encontró ninguna fila para actualizar con id_producto=${id}`));
+            }
+        });
+    });
+}
+
 
 module.exports = {
     conexion,
@@ -937,6 +996,9 @@ module.exports = {
     obtenerDatosProductoPorIdTienda,
     
     actualizarStockAdd,
-    actualizarConStock
+    actualizarConStock,
+
+    agregarProducto,
+    actualizarProducto
 
 }

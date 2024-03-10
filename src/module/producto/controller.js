@@ -14,11 +14,16 @@ module.exports = function (dbInjected) {
     function getById(id) {
         return db.obtenerProductosConDatosCompletosPorId(id);
     }
-    function add(body) {
-        return db.agregar(tabla, body);
+    async function add(producto) {
+        try {
+            const resultado = await db.agregarProducto(producto);
+            return resultado;
+        } catch (error) {
+            throw error;
+        }
     }
     function update(id, newData) {
-        return db.actualizar(tabla, id, newData);
+        return db.actualizarProducto(id, newData);
     }
     function remove(id) {
         return db.eliminar(tabla, id);

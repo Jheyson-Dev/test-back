@@ -1,8 +1,8 @@
 const express = require('express');
 const morgan = require('morgan')
+const multer = require('multer');
 const cors = require('cors');
 const config = require('./config');
-const upload = require('./middleware/multerConfig');
 
 const authRoutes = require('./module/auth/routes');
 const usuarios = require('./module/usuario/routes');
@@ -30,6 +30,7 @@ const dataIngresos = require('./module/data/dataProductosIngresadosRoutes');
 const dataBusqueda = require('./module/data/busquedaCodProductosRoutes');
 
 const errors = require('./red/errors');
+const excel = require('./module/data/excel');
 
 const app = express();
 
@@ -69,7 +70,18 @@ app.use('/api/destacados', dataDestacados);
 app.use('/api/p_ingresos', dataIngresos);
 app.use('/api/buscar_productos', dataBusqueda);
 
+const upload = multer({ dest: 'uploads/' }); // Directorio donde se guardarán los archivos subidos
 
+app.post('/api/upload-excel', upload.single('excel'), async (req, res) => {
+    try {
+        const rutaArchivo = req.file.path; // Obtiene la ruta del archivo subido
+        await excel.insertarDatosDesdeExcel(rutaArchivo);
+        res.status(200).send('Proceso de inserción de datos completado.');
+    } catch (error) {
+        console.error('Error durante el proceso de inserción de datos:', error);
+        res.status(500).send('Error durante el proceso de inserción de datos.');
+    }
+});
 
 
 app.use(errors);

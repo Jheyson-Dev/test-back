@@ -5,15 +5,15 @@ CREATE TABLE categoria (
                 id_categoria INT AUTO_INCREMENT NOT NULL,
                 nombre_producto VARCHAR(254) NOT NULL,
                 campo_medicion VARCHAR(254) NOT NULL,
-                url_campo_medicion VARCHAR(255) NOT NULL,
-                tipo VARCHAR(100) NOT NULL,
+                url_campo_medicion VARCHAR(255) NULL,
+                tipo VARCHAR(100) NULL,
                 PRIMARY KEY (id_categoria)
 );
 
 CREATE TABLE marca_auto (
                 id_marca_auto INT AUTO_INCREMENT NOT NULL,
                 nombre VARCHAR(254) NOT NULL,
-                img_url VARCHAR(500) NOT NULL,
+                img_url VARCHAR(500) NULL,
                 PRIMARY KEY (id_marca_auto)
 );
 
@@ -23,7 +23,7 @@ CREATE TABLE modelo_auto (
                 nombre VARCHAR(254) NOT NULL,
                 anio_inicio_termino VARCHAR(60) NOT NULL,
                 motor VARCHAR(150) NULL,
-                img_url VARCHAR(500) NOT NULL,
+                img_url VARCHAR(500) NULL,
                 id_marca_auto INT NOT NULL,
                 PRIMARY KEY (id_modelo_auto)
 );
@@ -32,18 +32,18 @@ CREATE TABLE modelo_auto (
 CREATE TABLE producto (
                 id_producto INT AUTO_INCREMENT NOT NULL,
                 codigo_OEM VARCHAR(100) NOT NULL,
-                codigo_interno VARCHAR(100) NOT NULL,
+                codigo_interno VARCHAR(100) NULL,
                 codigo_fabricante VARCHAR(100) NOT NULL,
-                origen VARCHAR(500) NOT NULL,
-                marca_fabricante VARCHAR(500) NOT NULL,
+                origen VARCHAR(500) NULL,
+                marca_fabricante VARCHAR(500) NULL,
                 descripcion VARCHAR(500) NOT NULL,
-                multiplos VARCHAR(200) NOT NULL,
+                multiplos VARCHAR(200) NULL,
                 consultas int DEFAULT 0,
-                medida VARCHAR(254) NOT NULL,
+                medida VARCHAR(254) NULL,
                 id_categoria INT NOT NULL,
-                precio_compra DOUBLE PRECISION NOT NULL,
+                precio_compra DOUBLE PRECISION NULL,
                 precio_venta DOUBLE PRECISION NOT NULL,
-                precio_minimo DOUBLE PRECISION NOT NULL,
+                precio_minimo DOUBLE PRECISION NULL,
                 PRIMARY KEY (id_producto)
 );
 
@@ -51,7 +51,7 @@ CREATE TABLE producto (
 CREATE TABLE img_producto (
                 id_img_producto INT AUTO_INCREMENT NOT NULL,
                 id_producto INT NOT NULL,
-                img_url VARCHAR(500) NOT NULL,
+                img_url VARCHAR(500) NULL,
                 PRIMARY KEY (id_img_producto)
 );
 
@@ -130,44 +130,44 @@ CREATE TABLE ingreso (
 CREATE TABLE auto (
                 id_auto INT AUTO_INCREMENT NOT NULL,
                 placa VARCHAR(20) NOT NULL,
-                serie_vin VARCHAR(150) NOT NULL,
-                img_url VARCHAR(500) NOT NULL,
+                serie_vin VARCHAR(150) NULL,
+                img_url VARCHAR(500) NULL,
                 PRIMARY KEY (id_auto)
 );
 CREATE TABLE reduccion_inventario (
                 id_reduccion_inventario INT AUTO_INCREMENT NOT NULL,
                 codigo_producto VARCHAR(20) NOT NULL,
-                sede VARCHAR(20) NOT NULL,
+                sede VARCHAR(20) NULL,
                 cantidad INT NULL,
-                usuario VARCHAR(50) NOT NULL,
-                fecha_hora DATETIME NOT NULL,
+                usuario VARCHAR(50) NULL,
+                fecha_hora DATETIME NULL,
                 PRIMARY KEY (id_reduccion_inventario)
 );
 CREATE TABLE compra (
                 id_compra INT AUTO_INCREMENT NOT NULL,
-                numero_factura VARCHAR(20) NOT NULL,
-                proveedor VARCHAR(20) NOT NULL,
-                fecha_inicio_vencimiento VARCHAR(60) NOT NULL,
+                numero_factura VARCHAR(20) NULL,
+                proveedor VARCHAR(20) NULL,
+                fecha_inicio_vencimiento VARCHAR(60) NULL,
                 estado CHAR(1) DEFAULT 1 CHECK (estado IN (1, 0)),
-                img_url VARCHAR(500) NOT NULL,
+                img_url VARCHAR(500) NULL,
                 PRIMARY KEY (id_compra)
 );
 CREATE TABLE pedido (
                 id_pedido INT AUTO_INCREMENT NOT NULL,
-                descripcion VARCHAR(400) NOT NULL,
-                medidas VARCHAR(100) NOT NULL,
+                descripcion VARCHAR(400) NULL,
+                medidas VARCHAR(100) NULL,
                 cantidad INT NULL,
-                img_url VARCHAR(500) NOT NULL,
+                img_url VARCHAR(500) NULL,
                 PRIMARY KEY (id_pedido)
 );
 CREATE TABLE traspaso (
                 id_traspaso INT AUTO_INCREMENT NOT NULL,
-                codigo_producto VARCHAR(20) NOT NULL,
+                codigo_producto VARCHAR(20) NULL,
                 cantidad INT NULL,
-                usuario VARCHAR(50) NOT NULL,
-                fecha_hora VARCHAR(100) NOT NULL,
-                tienda_origen VARCHAR(100) NOT NULL,
-                tienda_destino VARCHAR(100) NOT NULL,
+                usuario VARCHAR(50) NULL,
+                fecha_hora VARCHAR(100) NULL,
+                tienda_origen VARCHAR(100) NULL,
+                tienda_destino VARCHAR(100) NULL,
                 PRIMARY KEY (id_traspaso)
 );
 
