@@ -115,17 +115,17 @@ CREATE TABLE tienda_producto (
     PRIMARY KEY (id_tienda_producto)
 );
 
+-- Tablas unitarias (solo registros)
 
 CREATE TABLE ingreso (
                 id_ingreso INT AUTO_INCREMENT NOT NULL,
+                id_producto INT NOT NULL,
+                id_tienda INT NOT NULL,
                 cantidad INT NOT NULL,
                 fecha_hora VARCHAR(100) NOT NULL,
-                id_tienda_producto INT NOT NULL,
                 PRIMARY KEY (id_ingreso)
 );
 
-
--- Tablas unitarias (solo registros)
 
 CREATE TABLE auto (
                 id_auto INT AUTO_INCREMENT NOT NULL,
@@ -242,11 +242,5 @@ ON UPDATE CASCADE;
 ALTER TABLE tienda_producto ADD CONSTRAINT tienda_tienda_producto_fk
 FOREIGN KEY (id_tienda)
 REFERENCES tienda (id_tienda)
-ON DELETE CASCADE
-ON UPDATE CASCADE;
-
-ALTER TABLE ingreso ADD CONSTRAINT tienda_producto_ingreso_fk
-FOREIGN KEY (id_tienda_producto)
-REFERENCES tienda_producto (id_tienda_producto)
 ON DELETE CASCADE
 ON UPDATE CASCADE;

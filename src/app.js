@@ -26,7 +26,6 @@ const traspaso = require('./module/traspaso/routes');
 
 const dataPriorizadas = require('./module/data/dataProductosOfertasPriorizadasRoutes');
 const dataDestacados = require('./module/data/dataProductosDestacadosRoutes');
-const dataIngresos = require('./module/data/dataProductosIngresadosRoutes');
 const dataBusqueda = require('./module/data/busquedaCodProductosRoutes');
 
 const errors = require('./red/errors');
@@ -67,7 +66,6 @@ app.use('/api/traspasos', traspaso);
 
 app.use('/api/priorizadas', dataPriorizadas);
 app.use('/api/destacados', dataDestacados);
-app.use('/api/p_ingresos', dataIngresos);
 app.use('/api/buscar_productos', dataBusqueda);
 
 const upload = multer({ dest: 'uploads/' }); // Directorio donde se guardarán los archivos subidos

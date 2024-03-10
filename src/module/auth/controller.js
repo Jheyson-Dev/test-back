@@ -8,7 +8,8 @@ async function login(req, res, next) {
         const usuario = await usuarioController.getByField('username', username);
 
         if (usuario && await bcrypt.compare(password, usuario.password)) {
-            retorno.success(req, res, { message: 'Inicio de sesión exitoso' }, 200);
+            const { username, rol } = usuario;
+            retorno.success(req, res, { message: 'Inicio de sesión exitoso', username,rol }, 200);
         } else {
             retorno.error(req, res, 'Credenciales inválidas', 401);
         }

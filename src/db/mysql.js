@@ -819,100 +819,36 @@ GROUP BY
     });
 }
 
-function actualizarStockAdd(id_tienda_producto, cantidad) {
+
+
+function obtenerPorProductoYTienda(id_producto, id_tienda) {
     return new Promise((resolve, reject) => {
-        conexion.query('UPDATE tienda_producto SET stock = stock + ? WHERE id_tienda_producto = ?', [cantidad, id_tienda_producto], (error, results) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(results);
-            }
+        conexion.query(`SELECT * FROM tienda_producto WHERE id_producto = ? AND id_tienda = ?`, [id_producto, id_tienda], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+function actualizarStockTiendaProducto(id_tienda_producto, nuevoStock) {
+    return new Promise((resolve, reject) => {
+        conexion.query(`UPDATE tienda_producto SET stock = ? WHERE id_tienda_producto = ?`, [nuevoStock, id_tienda_producto], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+function crearRelacionTiendaProducto(id_producto, id_tienda, stock) {
+    return new Promise((resolve, reject) => {
+        conexion.query(`INSERT INTO tienda_producto (id_producto, id_tienda, stock) VALUES (?, ?, ?)`, [id_producto, id_tienda, stock], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
         });
     });
 }
 
 
-
-
-async function actualizarConStock(tabla, id, newData) {
-    const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
-    const [ingresoAnterior] = await obtenerPorId(tabla, id);
-    const cantidadAnterior = ingresoAnterior.cantidad;
-    const nuevaCantidad = newData.cantidad;
-    const diferenciaCantidad = nuevaCantidad - cantidadAnterior;
-    const idProductoAnterior = ingresoAnterior.id_tienda_producto;
-    const idProductoNuevo = newData.id_tienda_producto;
-    const idProductoCambiado = idProductoAnterior !== idProductoNuevo;
-
-    if (diferenciaCantidad === 0 && idProductoCambiado) {
-        console.log('No se pudo realizar la acción. La cantidad del ingreso no ha cambiado y se ha cambiado el id_tienda_producto.');
-        return;
-    }
-    const esAumento = diferenciaCantidad > 0;
-    const cantidadAbsoluta = Math.abs(diferenciaCantidad);
-    if (cantidadAbsoluta !== 0) {
-        try {
-            if (esAumento) {
-                await sumarStockProducto(ingresoAnterior.id_tienda_producto, cantidadAbsoluta);
-            } else {
-                await restarStockProducto(ingresoAnterior.id_tienda_producto, cantidadAbsoluta);
-            }
-        } catch (error) {
-            console.error('Error al actualizar el stock de la tienda producto:', error);
-            throw error;
-        }
-    }
-
-    conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], async (error, result) => {
-        if (error) {
-            console.error('Error al actualizar:', error);
-            throw error;
-        }
-
-        if (result.affectedRows > 0) {
-            console.log('Actualización de ingreso y stock de la tienda producto exitosas');
-        } else {
-            console.error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
-            throw new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`);
-        }
-    });
-}
-
-async function restarStockProducto(id_tienda_producto, cantidad) {
-    return new Promise((resolve, reject) => {
-        conexion.query(
-            `UPDATE tienda_producto SET stock = stock - ? WHERE id_tienda_producto = ?`,
-            [cantidad, id_tienda_producto],
-            (error, result) => {
-                if (error) {
-                    console.error('Error al restar el stock del tienda producto:', error);
-                    reject(error);
-                } else {
-                    console.log('Resta de stock del tienda producto anterior exitosa');
-                    resolve(result);
-                }
-            }
-        );
-    });
-}
-
-async function sumarStockProducto(id_tienda_producto, cantidad) {
-    return new Promise((resolve, reject) => {
-        conexion.query(
-            `UPDATE tienda_producto SET stock = stock + ? WHERE id_tienda_producto = ?`,
-            [cantidad, id_tienda_producto],
-            (error, result) => {
-                if (error) {
-                    console.error('Error al actualizar el stock del nuevo tienda producto:', error);
-                    reject(error);
-                } else {
-                    console.log('Suma de stock del nuevo tienda producto exitosa');
-                    resolve(result);
-                }
-            }
-        );
-    });
-}
 
 const TABLE_PRODUCTO = 'producto';
 
@@ -994,11 +930,11 @@ module.exports = {
     obtenerDatosProductoPorIdModelo,
     obtenerDatosProductoPorIdCategoria,
     obtenerDatosProductoPorIdTienda,
-    
-    actualizarStockAdd,
-    actualizarConStock,
 
     agregarProducto,
-    actualizarProducto
+    actualizarProducto,
 
+    obtenerPorProductoYTienda,
+    actualizarStockTiendaProducto,
+    crearRelacionTiendaProducto
 }
