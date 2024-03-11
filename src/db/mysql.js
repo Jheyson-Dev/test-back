@@ -911,6 +911,24 @@ function actualizarProducto(id, newData) {
 }
 
 
+function getByIdImage(id) {
+    return new Promise((resolve, reject) => {
+        conexion.query(`
+        SELECT ip.*, p.codigo_interno AS codigo_interno_producto
+        FROM img_producto ip
+        JOIN producto p ON ip.id_producto = p.id_producto
+        WHERE ip.id_img_producto = ?
+    `,
+        [id],
+        (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
+
+
+
 module.exports = {
     conexion,
     obtenerTodos,
@@ -937,5 +955,6 @@ module.exports = {
 
     obtenerPorProductoYTienda,
     actualizarStockTiendaProducto,
-    crearRelacionTiendaProducto
+    crearRelacionTiendaProducto,
+    getByIdImage
 }
