@@ -575,6 +575,7 @@ async function obtenerDatosProductoPorIdModelo(idModeloAuto) {
     return new Promise((resolve, reject) => {
         const query = `
             SELECT 
+                ma.id_marca_auto,    
                 ma.nombre AS nombre_marca,
                 mo.id_modelo_auto,
                 mo.nombre AS nombre_modelo,
