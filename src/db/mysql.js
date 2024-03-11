@@ -927,7 +927,44 @@ function getByIdImage(id) {
     });
 }
 
+function obtenerDatosCompletosPorIdAplicacion(idAplicacion) {
+    return new Promise((resolve, reject) => {
+        const query = `
+            SELECT 
+                ${oPDC},
+                COALESCE(ma.id_marca_auto, '') AS id_marca,
+                COALESCE(ma.nombre, '') AS nombre_marca,
+                COALESCE(mo.id_modelo_auto, '') AS id_modelo,
+                COALESCE(mo.nombre, '') AS nombre_modelo,
+                COALESCE(mo.anio_inicio_termino, '') AS anio_inicio_termino,
+                COALESCE(SUM(tp.stock), '') AS total_stock,
+                COALESCE(GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC), '') AS stock_por_tienda,
+                COALESCE((SELECT JSON_ARRAYAGG(JSON_OBJECT('id_img_producto', ip.id_img_producto, 'img_url', ip.img_url)) FROM img_producto ip WHERE ip.id_producto = p.id_producto), JSON_ARRAY()) AS imagenes
+            FROM 
+                aplicacion a
+            LEFT JOIN 
+                producto p ON a.id_producto = p.id_producto
+            LEFT JOIN 
+                categoria c ON p.id_categoria = c.id_categoria
+            LEFT JOIN 
+                modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
+            LEFT JOIN 
+                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+            LEFT JOIN 
+                tienda_producto tp ON p.id_producto = tp.id_producto
+            LEFT JOIN 
+                tienda t ON tp.id_tienda = t.id_tienda
+            WHERE 
+                a.id_aplicacion = ?
+            GROUP BY 
+                ${oPDC}`;
 
+        conexion.query(query, [idAplicacion], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
 
 module.exports = {
     conexion,
@@ -956,5 +993,6 @@ module.exports = {
     obtenerPorProductoYTienda,
     actualizarStockTiendaProducto,
     crearRelacionTiendaProducto,
-    getByIdImage
+    getByIdImage,
+    obtenerDatosCompletosPorIdAplicacion
 }
