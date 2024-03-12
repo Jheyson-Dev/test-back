@@ -9,12 +9,11 @@ const dbconfig = {
 };
 
 let conexion;
-
 function conexionMysql() {
-  // conexion = myqsl.createConnection(dbconfig);
-  // conexion = myqsl.createConnection(
-  //   "mysql://root:UxDPewrdNzPuxjwOiMYyyzlybMEzowWd@viaduct.proxy.rlwy.net:33379/railway"
-  // );
+  if (conexion) {
+    return;
+  }
+
   conexion = myqsl.createConnection(
     "mysql://u1vatf1bbfkde6re:Wo9EFWQZHkFUo9GNbXRp@bbm5itocspzuztvcv4rg-mysql.services.clever-cloud.com:3306/bbm5itocspzuztvcv4rg"
   );
@@ -31,12 +30,41 @@ function conexionMysql() {
   conexion.on("error", (err) => {
     console.log("[db err]", err);
     if (err.code === "PROTOCOL_CONNECTION_LOST") {
+      conexion = null;
       conexionMysql();
     } else {
       throw err;
     }
   });
 }
+
+// function conexionMysql() {
+//   // conexion = myqsl.createConnection(dbconfig);
+//   // conexion = myqsl.createConnection(
+//   //   "mysql://root:UxDPewrdNzPuxjwOiMYyyzlybMEzowWd@viaduct.proxy.rlwy.net:33379/railway"
+//   // );
+//   conexion = myqsl.createConnection(
+//     "mysql://u1vatf1bbfkde6re:Wo9EFWQZHkFUo9GNbXRp@bbm5itocspzuztvcv4rg-mysql.services.clever-cloud.com:3306/bbm5itocspzuztvcv4rg"
+//   );
+
+//   conexion.connect((err) => {
+//     if (err) {
+//       console.log("[db err]", err);
+//       setTimeout(conexionMysql, 200);
+//     } else {
+//       console.log("DB conectada!!!");
+//     }
+//   });
+
+//   conexion.on("error", (err) => {
+//     console.log("[db err]", err);
+//     if (err.code === "PROTOCOL_CONNECTION_LOST") {
+//       conexionMysql();
+//     } else {
+//       throw err;
+//     }
+//   });
+// }
 
 conexionMysql();
 
