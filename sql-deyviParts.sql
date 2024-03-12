@@ -136,8 +136,8 @@ CREATE TABLE auto (
 );
 CREATE TABLE reduccion_inventario (
                 id_reduccion_inventario INT AUTO_INCREMENT NOT NULL,
-                codigo_producto VARCHAR(20) NOT NULL,
-                sede VARCHAR(20) NULL,
+                id_producto INT NOT NULL,
+                id_tienda INT NOT NULL,
                 cantidad INT NULL,
                 usuario VARCHAR(50) NULL,
                 fecha_hora DATETIME NULL,
@@ -162,12 +162,12 @@ CREATE TABLE pedido (
 );
 CREATE TABLE traspaso (
                 id_traspaso INT AUTO_INCREMENT NOT NULL,
-                codigo_producto VARCHAR(20) NULL,
+                id_producto VARCHAR(20) NULL,
                 cantidad INT NULL,
                 usuario VARCHAR(50) NULL,
                 fecha_hora VARCHAR(100) NULL,
-                tienda_origen VARCHAR(100) NULL,
-                tienda_destino VARCHAR(100) NULL,
+                id_tienda_origen VARCHAR(100) NULL,
+                id_tienda_destino VARCHAR(100) NULL,
                 PRIMARY KEY (id_traspaso)
 );
 

@@ -455,55 +455,6 @@ function obtenerProductosConDatosCompletosPorId(id) {
     });
 }
 
-
-const iP = `i.id_ingreso,
-i.cantidad,
-i.fecha_hora,
-tp.id_producto,
-p.codigo_OEM,
-p.codigo_interno,
-p.codigo_fabricante,
-p.origen,
-p.marca_fabricante,
-p.descripcion,
-p.multiplos,
-p.consultas,
-p.medida,
-p.precio_compra,
-p.precio_venta,
-p.precio_minimo,
-c.nombre_producto`;
-
-function IngresosProductos(){
-    return new Promise((resolve, reject) => {
-        conexion.query(`SELECT 
-        ${iP},
-        COALESCE(JSON_ARRAYAGG(COALESCE(ip.img_url, '')), JSON_ARRAY()) AS imagenes
-    FROM 
-        ingreso i
-    INNER JOIN 
-        tienda_producto tp ON i.id_tienda_producto = tp.id_tienda_producto
-    INNER JOIN 
-        producto p ON tp.id_producto = p.id_producto
-    INNER JOIN 
-        categoria c ON p.id_categoria = c.id_categoria
-    LEFT JOIN 
-        img_producto ip ON p.id_producto = ip.id_producto
-    WHERE
-        i.cantidad != 0
-    GROUP BY 
-        ${iP}
-    ORDER BY SUBSTRING(i.fecha_hora, 1, 10) DESC, SUBSTRING(i.fecha_hora, 12, 8) DESC;`,
-        (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
-}
-
-
-
-
 function buscarProductosPorCodigo(busqueda) {
     return new Promise((resolve, reject) => {
         const query = `
@@ -903,26 +854,33 @@ function crearRelacionTiendaProducto(id_producto, id_tienda, stock) {
     });
 }
 
+function agregarReduccionInventario(id_producto, id_tienda, cantidad, usuario) {
+    return new Promise((resolve, reject) => {
+        const fecha_hora = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        conexion.query(`INSERT INTO reduccion_inventario (id_producto, id_tienda, cantidad, usuario, fecha_hora) VALUES (?, ?, ?, ?, ?)`, [id_producto, id_tienda, cantidad, usuario, fecha_hora], (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+        });
+    });
+}
 
 
 const TABLE_PRODUCTO = 'producto';
 
 function agregarProducto(producto) {
     return new Promise((resolve, reject) => {
-        // Contar la cantidad de registros existentes en la tabla producto
         conexion.query(`SELECT COUNT(*) AS total FROM ${TABLE_PRODUCTO}`, (error, results) => {
             if (error) {
                 return reject(error);
             }
 
-            let ultimoNumero = results[0].total + 1; // Obtener el siguiente número en base a la cantidad de registros
+            let ultimoNumero = results[0].total + 1;
             const codigoInterno = generarCodigoInterno(ultimoNumero);
             const newData = {
                 ...producto,
                 codigo_interno: codigoInterno
             };
 
-            // Insertar el nuevo producto con el código interno generado
             conexion.query(`INSERT INTO ${TABLE_PRODUCTO} SET ?`, newData, (error, result) => {
                 if (error) {
                     console.error('Error al insertar:', error);
@@ -936,7 +894,7 @@ function agregarProducto(producto) {
 }
 
 function generarCodigoInterno(ultimoNumero) {
-    const year = new Date().getFullYear(); // Año actual
+    const year = new Date().getFullYear();
     return `DE-PA-${year}-P${pad(ultimoNumero, 4)}`;
 }
 
@@ -946,7 +904,6 @@ function pad(number, length) {
 
 function actualizarProducto(id, newData) {
     return new Promise((resolve, reject) => {
-        // Eliminar el campo codigo_interno del objeto newData
         delete newData.codigo_interno;
 
         conexion.query(`UPDATE ${TABLE_PRODUCTO} SET ? WHERE id_producto = ?`, [newData, id], (error, result) => {
@@ -1038,7 +995,6 @@ module.exports = {
     actualizarNumeroConsulta,
     obtenerProductosConDatosCompletos,
     obtenerProductosConDatosCompletosPorId,
-    IngresosProductos,
     obtenerProductosDestacados, 
     buscarProductosPorCodigo,
     obtenerModelosPorIdMarca,
@@ -1054,5 +1010,6 @@ module.exports = {
     crearRelacionTiendaProducto,
     getByIdImage,
     obtenerDatosCompletosPorIdAplicacion,
+    agregarReduccionInventario
     
 }
