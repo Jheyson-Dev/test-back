@@ -1,104 +1,128 @@
-const myqsl = require('mysql2');
-const config = require('../config');
+const myqsl = require("mysql2");
+const config = require("../config");
 
 const dbconfig = {
-    host: config.mysql.host,
-    user: config.mysql.user,
-    password: config.mysql.password,
-    database: config.mysql.database,
-}
+  host: config.mysql.host,
+  user: config.mysql.user,
+  password: config.mysql.password,
+  database: config.mysql.database,
+};
 
 let conexion;
 
-function conexionMysql(){
-    conexion = myqsl.createConnection(dbconfig);
+function conexionMysql() {
+  // conexion = myqsl.createConnection(dbconfig);
+  // conexion = myqsl.createConnection(
+  //   "mysql://root:UxDPewrdNzPuxjwOiMYyyzlybMEzowWd@viaduct.proxy.rlwy.net:33379/railway"
+  // );
+  conexion = myqsl.createConnection(
+    "mysql://u1vatf1bbfkde6re:Wo9EFWQZHkFUo9GNbXRp@bbm5itocspzuztvcv4rg-mysql.services.clever-cloud.com:3306/bbm5itocspzuztvcv4rg"
+  );
 
-    conexion.connect((err) => {
-        if(err){
-            console.log('[db err]', err);
-            setTimeout(conexionMysql, 200);
-        }else{
-            console.log('DB conectada!!!');
-        }
-    });
+  conexion.connect((err) => {
+    if (err) {
+      console.log("[db err]", err);
+      setTimeout(conexionMysql, 200);
+    } else {
+      console.log("DB conectada!!!");
+    }
+  });
 
-    conexion.on('error', err => {
-        console.log('[db err]', err);
-        if(err.code === 'PROTOCOL_CONNECTION_LOST'){
-            conexionMysql();
-        }else{
-            throw err;
-        }
-    })
+  conexion.on("error", (err) => {
+    console.log("[db err]", err);
+    if (err.code === "PROTOCOL_CONNECTION_LOST") {
+      conexionMysql();
+    } else {
+      throw err;
+    }
+  });
 }
 
 conexionMysql();
 
-
-function obtenerTodos(tabla){
-    return new Promise((resolve, reject) => {
-        conexion.query(`Select * from ${tabla}`, (error, result) => {
-            if(error) return reject(error);
-            resolve(result);
-        })
-    })
+function obtenerTodos(tabla) {
+  return new Promise((resolve, reject) => {
+    conexion.query(`Select * from ${tabla}`, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+  });
 }
 
-function obtenerPorId(tabla, id){
-    const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
-    return new Promise((resolve, reject) => {
-        conexion.query(`Select * from ${tabla} WHERE ${idColumn} = ${id}`, (error, result) => {
-            if(error) return reject(error);
-            resolve(result);
-        })
-    })
+function obtenerPorId(tabla, id) {
+  const idColumn = `id_${tabla.replace(/^.*\./, "")}`;
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `Select * from ${tabla} WHERE ${idColumn} = ${id}`,
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function agregar(tabla, data) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`INSERT INTO ${tabla} SET ?`, data, (error, result) => {
-            if (error) {
-                console.error('Error al insertar:', error);
-                return reject(error);
-            }
-            console.log('Inserción exitosa:', result);
-            resolve(result);
-        });
+  return new Promise((resolve, reject) => {
+    conexion.query(`INSERT INTO ${tabla} SET ?`, data, (error, result) => {
+      if (error) {
+        console.error("Error al insertar:", error);
+        return reject(error);
+      }
+      console.log("Inserción exitosa:", result);
+      resolve(result);
     });
+  });
 }
 
 function actualizar(tabla, id, newData) {
-    const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
-    return new Promise((resolve, reject) => {
-        conexion.query(`UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`, [newData, id], (error, result) => {
-            if (error) {
-                return reject(error);
-            }
+  const idColumn = `id_${tabla.replace(/^.*\./, "")}`;
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `UPDATE ${tabla} SET ? WHERE ${idColumn} = ?`,
+      [newData, id],
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
 
-            if (result.affectedRows > 0) {
-                resolve(result);
-            } else {
-                reject(new Error(`No se encontró ninguna fila para actualizar con ${idColumn}=${id}`));
-            }
-        });
-    });
+        if (result.affectedRows > 0) {
+          resolve(result);
+        } else {
+          reject(
+            new Error(
+              `No se encontró ninguna fila para actualizar con ${idColumn}=${id}`
+            )
+          );
+        }
+      }
+    );
+  });
 }
 
 function eliminar(tabla, id) {
-    const idColumn = `id_${tabla.replace(/^.*\./, '')}`;
-    return new Promise((resolve, reject) => {
-        conexion.query(`DELETE FROM ${tabla} WHERE ${idColumn} = ?`, id, (error, result) => {
-            if (error) {
-                return reject(error);
-            }
+  const idColumn = `id_${tabla.replace(/^.*\./, "")}`;
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `DELETE FROM ${tabla} WHERE ${idColumn} = ?`,
+      id,
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
 
-            if (result.affectedRows > 0) {
-                resolve(result);
-            } else {
-                reject(new Error(`No se encontró ninguna fila para eliminar con ${idColumn}=${id}`));
-            }
-        });
-    });
+        if (result.affectedRows > 0) {
+          resolve(result);
+        } else {
+          reject(
+            new Error(
+              `No se encontró ninguna fila para eliminar con ${idColumn}=${id}`
+            )
+          );
+        }
+      }
+    );
+  });
 }
 
 const productosOferta = `
@@ -128,43 +152,49 @@ LEFT JOIN
 LEFT JOIN 
     tienda t ON tp.id_tienda = t.id_tienda
 LEFT JOIN
-    img_producto ip ON p.id_producto = ip.id_producto`
+    img_producto ip ON p.id_producto = ip.id_producto`;
 
 function obtenerProductosConPriorizacionSI() {
-    return new Promise((resolve, reject) => {
-        conexion.query(`
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `
         ${productosOferta}
         WHERE 
             o.priorizacion = 'si'
         GROUP BY 
             p.id_producto, c.nombre_producto, o.descuento, o.id_oferta
-        `, (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+        `,
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function obtenerProductosConOferta() {
-    return new Promise((resolve, reject) => {
-        conexion.query(`${productosOferta}
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `${productosOferta}
     GROUP BY 
         p.id_producto, c.nombre_producto, o.descuento, o.priorizacion, o.id_oferta
-        `, (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+        `,
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 async function actualizarNumeroConsulta(idProducto) {
-    try {
-      const query = `UPDATE producto SET consultas = consultas + 1 WHERE id_producto = ?`;
-      const [resultado] = await conexion.promise().execute(query, [idProducto]);
-      return resultado;
-    } catch (error) {
-      throw error;
-    }
+  try {
+    const query = `UPDATE producto SET consultas = consultas + 1 WHERE id_producto = ?`;
+    const [resultado] = await conexion.promise().execute(query, [idProducto]);
+    return resultado;
+  } catch (error) {
+    throw error;
+  }
 }
 
 const oPDC = `p.id_producto,
@@ -187,8 +217,9 @@ const oPDC = `p.id_producto,
     c.tipo`;
 
 function obtenerProductosConDatosCompletos() {
-    return new Promise((resolve, reject) => {
-        conexion.query(`SELECT 
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `SELECT 
         ${oPDC},
         COALESCE((
             SELECT ma.nombre
@@ -253,16 +284,18 @@ function obtenerProductosConDatosCompletos() {
         tienda t ON tp.id_tienda = t.id_tienda
     GROUP BY 
         ${oPDC}`,
-        (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function obtenerProductosDestacados() {
-    return new Promise((resolve, reject) => {
-        conexion.query(`SELECT 
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `SELECT 
         ${oPDC},
         COALESCE((
             SELECT ma.nombre
@@ -328,16 +361,18 @@ function obtenerProductosDestacados() {
         ${oPDC}
     ORDER BY 
         p.consultas DESC;`,
-        (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function obtenerProductosConDatosCompletosPorId(id) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`SELECT 
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `SELECT 
         p.id_producto,
         p.codigo_OEM,
         p.codigo_interno,
@@ -356,7 +391,6 @@ function obtenerProductosConDatosCompletosPorId(id) {
         c.campo_medicion,
         c.url_campo_medicion,
         c.tipo,
-        COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
         COALESCE((
             SELECT 
                 JSON_ARRAYAGG(
@@ -380,7 +414,7 @@ function obtenerProductosConDatosCompletosPorId(id) {
         COALESCE((
             SELECT 
                 JSON_ARRAYAGG(
-                    JSON_OBJECT('stock', tp.stock, 'id_tienda', t.id_tienda, 'razon_social', t.razon_social)
+                    JSON_OBJECT('id_tienda', t.id_tienda, 'ruc', t.ruc, 'razon_social', t.razon_social, 'direccion', t.direccion, 'encargado', t.encargado, 'celular', t.celular, 'stock', tp.stock)
                 ) 
             FROM 
                 tienda_producto tp 
@@ -449,17 +483,18 @@ function obtenerProductosConDatosCompletosPorId(id) {
         categoria c ON p.id_categoria = c.id_categoria
     WHERE
         p.id_producto = ?`,
-        [id],
-        (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+      [id],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function buscarProductosPorCodigo(busqueda) {
-    return new Promise((resolve, reject) => {
-        const query = `
+  return new Promise((resolve, reject) => {
+    const query = `
             SELECT 
                 ${oPDC},
                 COALESCE((
@@ -529,17 +564,20 @@ function buscarProductosPorCodigo(busqueda) {
             GROUP BY 
                 ${oPDC}`;
 
-        conexion.query(query, [`%${busqueda}%`, `%${busqueda}%`, `%${busqueda}%`], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+    conexion.query(
+      query,
+      [`%${busqueda}%`, `%${busqueda}%`, `%${busqueda}%`],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
-
 async function obtenerModelosPorIdMarca(idMarcaAuto) {
-    return new Promise((resolve, reject) => {
-        const query = `
+  return new Promise((resolve, reject) => {
+    const query = `
             SELECT 
                 ma.id_marca_auto,
                 ma.nombre AS nombre_marca,
@@ -581,17 +619,16 @@ async function obtenerModelosPorIdMarca(idMarcaAuto) {
             GROUP BY 
                 ma.id_marca_auto, ma.nombre, ma.img_url`;
 
-        conexion.query(query, [idMarcaAuto], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
+    conexion.query(query, [idMarcaAuto], (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
     });
+  });
 }
 
-
 async function obtenerDatosProductoPorIdModelo(idModeloAuto) {
-    return new Promise((resolve, reject) => {
-        const query = `
+  return new Promise((resolve, reject) => {
+    const query = `
         SELECT 
             ma.id_marca_auto,    
             ma.nombre AS nombre_marca,
@@ -655,17 +692,16 @@ async function obtenerDatosProductoPorIdModelo(idModeloAuto) {
             mo.id_modelo_auto;
         `;
 
-        conexion.query(query, [idModeloAuto], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
+    conexion.query(query, [idModeloAuto], (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
     });
+  });
 }
 
-
 async function obtenerDatosProductoPorIdCategoria(idCategoria) {
-    return new Promise((resolve, reject) => {
-        const query = `
+  return new Promise((resolve, reject) => {
+    const query = `
             SELECT 
                 c.id_categoria,
                 c.nombre_producto AS nombre_categoria,
@@ -699,18 +735,16 @@ async function obtenerDatosProductoPorIdCategoria(idCategoria) {
                 c.id_categoria;
         `;
 
-        conexion.query(query, [idCategoria], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
+    conexion.query(query, [idCategoria], (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
     });
+  });
 }
 
-
-
 async function obtenerDatosProductoPorIdTienda(idTienda) {
-    return new Promise((resolve, reject) => {
-        const query = `
+  return new Promise((resolve, reject) => {
+    const query = `
         SELECT 
     t.id_tienda,
     t.ruc,
@@ -820,129 +854,158 @@ GROUP BY
     t.id_tienda;
         `;
 
-        conexion.query(query, [idTienda], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
+    conexion.query(query, [idTienda], (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
     });
+  });
 }
 
-
-
 function obtenerPorProductoYTienda(id_producto, id_tienda) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`SELECT * FROM tienda_producto WHERE id_producto = ? AND id_tienda = ?`, [id_producto, id_tienda], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `SELECT * FROM tienda_producto WHERE id_producto = ? AND id_tienda = ?`,
+      [id_producto, id_tienda],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function actualizarStockTiendaProducto(id_tienda_producto, nuevoStock) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`UPDATE tienda_producto SET stock = ? WHERE id_tienda_producto = ?`, [nuevoStock, id_tienda_producto], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `UPDATE tienda_producto SET stock = ? WHERE id_tienda_producto = ?`,
+      [nuevoStock, id_tienda_producto],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function crearRelacionTiendaProducto(id_producto, id_tienda, stock) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`INSERT INTO tienda_producto (id_producto, id_tienda, stock) VALUES (?, ?, ?)`, [id_producto, id_tienda, stock], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `INSERT INTO tienda_producto (id_producto, id_tienda, stock) VALUES (?, ?, ?)`,
+      [id_producto, id_tienda, stock],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function agregarReduccionInventario(id_producto, id_tienda, cantidad, usuario) {
-    return new Promise((resolve, reject) => {
-        const fecha_hora = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        conexion.query(`INSERT INTO reduccion_inventario (id_producto, id_tienda, cantidad, usuario, fecha_hora) VALUES (?, ?, ?, ?, ?)`, [id_producto, id_tienda, cantidad, usuario, fecha_hora], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+  return new Promise((resolve, reject) => {
+    const fecha_hora = new Date().toISOString().slice(0, 19).replace("T", " ");
+    conexion.query(
+      `INSERT INTO reduccion_inventario (id_producto, id_tienda, cantidad, usuario, fecha_hora) VALUES (?, ?, ?, ?, ?)`,
+      [id_producto, id_tienda, cantidad, usuario, fecha_hora],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
-
-const TABLE_PRODUCTO = 'producto';
+const TABLE_PRODUCTO = "producto";
 
 function agregarProducto(producto) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`SELECT COUNT(*) AS total FROM ${TABLE_PRODUCTO}`, (error, results) => {
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `SELECT COUNT(*) AS total FROM ${TABLE_PRODUCTO}`,
+      (error, results) => {
+        if (error) {
+          return reject(error);
+        }
+
+        let ultimoNumero = results[0].total + 1;
+        const codigoInterno = generarCodigoInterno(ultimoNumero);
+        const newData = {
+          ...producto,
+          codigo_interno: codigoInterno,
+        };
+
+        conexion.query(
+          `INSERT INTO ${TABLE_PRODUCTO} SET ?`,
+          newData,
+          (error, result) => {
             if (error) {
-                return reject(error);
+              console.error("Error al insertar:", error);
+              return reject(error);
             }
-
-            let ultimoNumero = results[0].total + 1;
-            const codigoInterno = generarCodigoInterno(ultimoNumero);
-            const newData = {
-                ...producto,
-                codigo_interno: codigoInterno
-            };
-
-            conexion.query(`INSERT INTO ${TABLE_PRODUCTO} SET ?`, newData, (error, result) => {
-                if (error) {
-                    console.error('Error al insertar:', error);
-                    return reject(error);
-                }
-                console.log('Inserción exitosa:', result);
-                resolve(result);
-            });
-        });
-    });
+            console.log("Inserción exitosa:", result);
+            resolve(result);
+          }
+        );
+      }
+    );
+  });
 }
 
 function generarCodigoInterno(ultimoNumero) {
-    const year = new Date().getFullYear();
-    return `DE-PA-${year}-P${pad(ultimoNumero, 4)}`;
+  const year = new Date().getFullYear();
+  return `DE-PA-${year}-P${pad(ultimoNumero, 4)}`;
 }
 
 function pad(number, length) {
-    return ('0000' + number).slice(-length);
+  return ("0000" + number).slice(-length);
 }
 
 function actualizarProducto(id, newData) {
-    return new Promise((resolve, reject) => {
-        delete newData.codigo_interno;
+  return new Promise((resolve, reject) => {
+    delete newData.codigo_interno;
 
-        conexion.query(`UPDATE ${TABLE_PRODUCTO} SET ? WHERE id_producto = ?`, [newData, id], (error, result) => {
-            if (error) {
-                console.error('Error al actualizar:', error);
-                return reject(error);
-            }
+    conexion.query(
+      `UPDATE ${TABLE_PRODUCTO} SET ? WHERE id_producto = ?`,
+      [newData, id],
+      (error, result) => {
+        if (error) {
+          console.error("Error al actualizar:", error);
+          return reject(error);
+        }
 
-            if (result.affectedRows > 0) {
-                resolve(result);
-            } else {
-                reject(new Error(`No se encontró ninguna fila para actualizar con id_producto=${id}`));
-            }
-        });
-    });
+        if (result.affectedRows > 0) {
+          resolve(result);
+        } else {
+          reject(
+            new Error(
+              `No se encontró ninguna fila para actualizar con id_producto=${id}`
+            )
+          );
+        }
+      }
+    );
+  });
 }
 
-
 function getByIdImage(id) {
-    return new Promise((resolve, reject) => {
-        conexion.query(`
+  return new Promise((resolve, reject) => {
+    conexion.query(
+      `
         SELECT ip.*, p.codigo_interno AS codigo_interno_producto
         FROM img_producto ip
         JOIN producto p ON ip.id_producto = p.id_producto
         WHERE ip.id_img_producto = ?
     `,
-        [id],
-        (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
-    });
+      [id],
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
 }
 
 function obtenerDatosCompletosPorIdAplicacion(idAplicacion) {
-    return new Promise((resolve, reject) => {
-        const query = `
+  return new Promise((resolve, reject) => {
+    const query = `
             SELECT 
                 ${oPDC},
                 COALESCE(ma.id_marca_auto, '') AS id_marca,
@@ -977,41 +1040,40 @@ function obtenerDatosCompletosPorIdAplicacion(idAplicacion) {
             GROUP BY 
                 ${oPDC}`;
 
-        conexion.query(query, [idAplicacion], (error, result) => {
-            if (error) return reject(error);
-            resolve(result);
-        });
+    conexion.query(query, [idAplicacion], (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
     });
+  });
 }
 
 module.exports = {
-    conexion,
-    obtenerTodos,
-    obtenerPorId,
-    agregar,
-    actualizar,
-    eliminar,
+  conexion,
+  obtenerTodos,
+  obtenerPorId,
+  agregar,
+  actualizar,
+  eliminar,
 
-    obtenerProductosConPriorizacionSI,
-    obtenerProductosConOferta,
-    actualizarNumeroConsulta,
-    obtenerProductosConDatosCompletos,
-    obtenerProductosConDatosCompletosPorId,
-    obtenerProductosDestacados, 
-    buscarProductosPorCodigo,
-    obtenerModelosPorIdMarca,
-    obtenerDatosProductoPorIdModelo,
-    obtenerDatosProductoPorIdCategoria,
-    obtenerDatosProductoPorIdTienda,
+  obtenerProductosConPriorizacionSI,
+  obtenerProductosConOferta,
+  actualizarNumeroConsulta,
+  obtenerProductosConDatosCompletos,
+  obtenerProductosConDatosCompletosPorId,
+  obtenerProductosDestacados,
+  buscarProductosPorCodigo,
+  obtenerModelosPorIdMarca,
+  obtenerDatosProductoPorIdModelo,
+  obtenerDatosProductoPorIdCategoria,
+  obtenerDatosProductoPorIdTienda,
 
-    agregarProducto,
-    actualizarProducto,
+  agregarProducto,
+  actualizarProducto,
 
-    obtenerPorProductoYTienda,
-    actualizarStockTiendaProducto,
-    crearRelacionTiendaProducto,
-    getByIdImage,
-    obtenerDatosCompletosPorIdAplicacion,
-    agregarReduccionInventario
-    
-}
+  obtenerPorProductoYTienda,
+  actualizarStockTiendaProducto,
+  crearRelacionTiendaProducto,
+  getByIdImage,
+  obtenerDatosCompletosPorIdAplicacion,
+  agregarReduccionInventario,
+};
