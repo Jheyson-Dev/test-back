@@ -218,6 +218,7 @@ function obtenerProductosConDatosCompletos() {
         COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
         JSON_ARRAYAGG(
             JSON_OBJECT(
+                'id_tienda', t.id_tienda,
                 'razon_social', t.razon_social,
                 'stock', tp.stock
             )
