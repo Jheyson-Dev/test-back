@@ -110,7 +110,12 @@ SELECT
     c.nombre_producto,
     p.*,    
     (SELECT SUM(stock) FROM tienda_producto WHERE id_producto = p.id_producto) AS total_stock,
-    GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC) AS stock_por_tienda,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'razon_social', t.razon_social,
+            'stock', tp.stock
+        )
+    ) AS tiendas_con_stock,
     (SELECT JSON_ARRAYAGG(img_url) FROM img_producto WHERE id_producto = p.id_producto) AS imagenes
 FROM 
     producto p
@@ -211,7 +216,12 @@ function obtenerProductosConDatosCompletos() {
             LIMIT 1
         ), '') AS anio_inicio_termino,
         COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
-        COALESCE((GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC)), '') AS stock_por_tienda,
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'razon_social', t.razon_social,
+                'stock', tp.stock
+            )
+        ) AS tiendas_con_stock,
         COALESCE((
             SELECT 
                 JSON_ARRAYAGG(
@@ -279,7 +289,12 @@ function obtenerProductosDestacados() {
             LIMIT 1
         ), '') AS anio_inicio_termino,
         COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
-        COALESCE((GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC)), '') AS stock_por_tienda,
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'razon_social', t.razon_social,
+                'stock', tp.stock
+            )
+        ) AS tiendas_con_stock,
         COALESCE((
             SELECT 
                 JSON_ARRAYAGG(
@@ -372,14 +387,47 @@ function obtenerProductosConDatosCompletosPorId(id) {
                 tp.id_producto = p.id_producto
         ), JSON_ARRAY()) AS tiendas,
         COALESCE((
-            SELECT 
-                JSON_ARRAYAGG(
-                    JSON_OBJECT('id_reemplazo', r.id_reemplazo, 'id_producto', r.id_producto, 'producto_reemplazo', r.producto_reemplazo, 'variacion', r.variacion, 'notas', r.notas)
-                ) 
-            FROM 
-                reemplazo r 
-            WHERE 
-                r.id_producto = p.id_producto
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'id_reemplazo', r.id_reemplazo,
+                    'id_producto', r.id_producto,
+                    'id_producto_reemplazo', r.producto_reemplazo,
+                    'variacion', r.variacion,
+                    'notas', r.notas,
+                    'producto_reemplazo', (
+                        SELECT JSON_OBJECT(
+                            'id_producto', pr.id_producto,
+                            'codigo_OEM', pr.codigo_OEM,
+                            'codigo_interno', pr.codigo_interno,
+                            'codigo_fabricante', pr.codigo_fabricante,
+                            'origen', pr.origen,
+                            'marca_fabricante', pr.marca_fabricante,
+                            'descripcion', pr.descripcion,
+                            'multiplos', pr.multiplos,
+                            'consultas', pr.consultas,
+                            'medida', pr.medida,
+                            'precio_compra', pr.precio_compra,
+                            'precio_venta', pr.precio_venta,
+                            'precio_minimo', pr.precio_minimo,
+                            'categoria', (
+                                SELECT JSON_OBJECT(
+                                    'id_categoria', pc.id_categoria,
+                                    'nombre_producto', pc.nombre_producto,
+                                    'campo_medicion', pc.campo_medicion,
+                                    'url_campo_medicion', pc.url_campo_medicion,
+                                    'tipo', pc.tipo
+                                )
+                                FROM categoria pc
+                                WHERE pc.id_categoria = pr.id_categoria
+                            )
+                        )
+                        FROM producto pr
+                        WHERE pr.id_producto = r.producto_reemplazo
+                    )
+                )
+            )
+            FROM reemplazo r 
+            WHERE r.id_producto = p.id_producto
         ), JSON_ARRAY()) AS reemplazos,
         COALESCE((
             SELECT 
@@ -487,7 +535,12 @@ function buscarProductosPorCodigo(busqueda) {
                     LIMIT 1
                 ), '') AS anio_inicio_termino,
                 COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
-                COALESCE((GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC)), '') AS stock_por_tienda,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'razon_social', t.razon_social,
+                        'stock', tp.stock
+                    )
+                ) AS tiendas_con_stock,
                 COALESCE((
                     SELECT 
                         JSON_ARRAYAGG(
@@ -542,7 +595,7 @@ async function obtenerModelosPorIdMarca(idMarcaAuto) {
                     JSON_ARRAYAGG(
                         JSON_OBJECT(
                             'id_modelo_auto', 
-                            COALESCE(mo.id_modelo_auto, ''),
+                            COALESCE(mo.id_modelo_auto),
                             'nombre_modelo', 
                             COALESCE(mo.nombre, ''),
                             'anio_inicio_termino', 
@@ -550,7 +603,18 @@ async function obtenerModelosPorIdMarca(idMarcaAuto) {
                             'motor', 
                             COALESCE(mo.motor, ''),
                             'img_url_modelo', 
-                            COALESCE(mo.img_url, '')
+                            COALESCE(mo.img_url, ''),
+                            'cantidad_productos', 
+                            (
+                                SELECT 
+                                    COUNT(DISTINCT p.id_producto)
+                                FROM 
+                                    producto p
+                                INNER JOIN 
+                                    aplicacion a ON p.id_producto = a.id_producto
+                                WHERE 
+                                    a.id_modelo_auto = mo.id_modelo_auto
+                            )
                         )
                     ), 
                     JSON_ARRAY()
@@ -571,60 +635,71 @@ async function obtenerModelosPorIdMarca(idMarcaAuto) {
     });
 }
 
+
 async function obtenerDatosProductoPorIdModelo(idModeloAuto) {
     return new Promise((resolve, reject) => {
         const query = `
-            SELECT 
-                ma.id_marca_auto,    
-                ma.nombre AS nombre_marca,
-                mo.id_modelo_auto,
-                mo.nombre AS nombre_modelo,
-                mo.anio_inicio_termino,
-                mo.motor,
-                mo.img_url,
-                COALESCE(
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id_producto', p.id_producto,
-                            'codigo_OEM', p.codigo_OEM,
-                            'codigo_interno', p.codigo_interno,
-                            'codigo_fabricante', p.codigo_fabricante,
-                            'origen', p.origen,
-                            'marca_fabricante', p.marca_fabricante,
-                            'descripcion', p.descripcion,
-                            'multiplos', p.multiplos,
-                            'consultas', p.consultas,
-                            'medida', p.medida,
-                            'precio_compra', p.precio_compra,
-                            'precio_venta', p.precio_venta,
-                            'precio_minimo', p.precio_minimo,
-                            'id_categoria', c.id_categoria,
-                            'nombre_producto', c.nombre_producto,
-                            'total_stock', COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), ''),
-                            'stock_por_tienda', COALESCE((SELECT GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC) FROM tienda_producto tp INNER JOIN tienda t ON tp.id_tienda = t.id_tienda WHERE tp.id_producto = p.id_producto GROUP BY tp.id_producto), ''),
-                            'imagenes', (
-                                SELECT JSON_ARRAYAGG(COALESCE(img_url, '')) 
-                                FROM img_producto 
-                                WHERE id_producto = p.id_producto
+        SELECT 
+            ma.id_marca_auto,    
+            ma.nombre AS nombre_marca,
+            mo.id_modelo_auto,
+            mo.nombre AS nombre_modelo,
+            mo.anio_inicio_termino,
+            mo.motor,
+            mo.img_url,
+            COALESCE(
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id_producto', p.id_producto,
+                        'codigo_OEM', p.codigo_OEM,
+                        'codigo_interno', p.codigo_interno,
+                        'codigo_fabricante', p.codigo_fabricante,
+                        'origen', p.origen,
+                        'marca_fabricante', p.marca_fabricante,
+                        'descripcion', p.descripcion,
+                        'multiplos', p.multiplos,
+                        'consultas', p.consultas,
+                        'medida', p.medida,
+                        'precio_compra', p.precio_compra,
+                        'precio_venta', p.precio_venta,
+                        'precio_minimo', p.precio_minimo,
+                        'id_categoria', c.id_categoria,
+                        'nombre_producto', c.nombre_producto,
+                        'total_stock', COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), ''),
+                        'stock_por_tienda', (
+                            SELECT JSON_ARRAYAGG(
+                                JSON_OBJECT(
+                                    'razon_social', t.razon_social,
+                                    'stock', tp.stock
+                                )
                             )
+                            FROM tienda_producto tp
+                            INNER JOIN tienda t ON tp.id_tienda = t.id_tienda
+                            WHERE tp.id_producto = p.id_producto
+                        ),
+                        'imagenes', (
+                            SELECT JSON_ARRAYAGG(COALESCE(img_url, '')) 
+                            FROM img_producto 
+                            WHERE id_producto = p.id_producto
                         )
-                    ), 
-                    JSON_ARRAY()
-                ) AS productos
-            FROM 
-                modelo_auto mo
-            LEFT JOIN 
-                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
-            LEFT JOIN 
-                aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
-            LEFT JOIN 
-                producto p ON a.id_producto = p.id_producto
-            LEFT JOIN 
-                categoria c ON p.id_categoria = c.id_categoria
-            WHERE 
-                mo.id_modelo_auto = ?
-            GROUP BY 
-                mo.id_modelo_auto;
+                    )
+                ), 
+                JSON_ARRAY()
+            ) AS productos
+        FROM 
+            modelo_auto mo
+        LEFT JOIN 
+            marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
+        LEFT JOIN 
+            aplicacion a ON mo.id_modelo_auto = a.id_modelo_auto
+        LEFT JOIN 
+            producto p ON a.id_producto = p.id_producto
+        LEFT JOIN 
+            categoria c ON p.id_categoria = c.id_categoria
+        WHERE 
+            mo.id_modelo_auto = ?
+        GROUP BY 
+            mo.id_modelo_auto;
         `;
 
         conexion.query(query, [idModeloAuto], (error, result) => {
@@ -644,52 +719,31 @@ async function obtenerDatosProductoPorIdCategoria(idCategoria) {
                 c.campo_medicion,
                 c.url_campo_medicion,
                 c.tipo,
-                COALESCE(
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id_producto', p.id_producto,
-                            'codigo_OEM', p.codigo_OEM,
-                            'codigo_interno', p.codigo_interno,
-                            'codigo_fabricante', p.codigo_fabricante,
-                            'origen', p.origen,
-                            'marca_fabricante', p.marca_fabricante,
-                            'descripcion', p.descripcion,
-                            'multiplos', p.multiplos,
-                            'consultas', p.consultas,
-                            'medida', p.medida,
-                            'precio_compra', p.precio_compra,
-                            'precio_venta', p.precio_venta,
-                            'precio_minimo', p.precio_minimo,
-                            'id_marca_auto', ma.id_marca_auto,
-                            'marca_auto', ma.nombre,
-                            'id_modelo_auto', mo.id_modelo_auto,
-                            'modelo_auto', mo.nombre,
-                            'anio_inicio_termino', mo.anio_inicio_termino,
-                            'total_stock', COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), ''),
-                            'stock_por_tienda', COALESCE((SELECT GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC) FROM tienda_producto tp INNER JOIN tienda t ON tp.id_tienda = t.id_tienda WHERE tp.id_producto = p.id_producto GROUP BY tp.id_producto), ''),
-                            'imagenes', (
-                                SELECT JSON_ARRAYAGG(COALESCE(img_url, '')) 
-                                FROM img_producto 
-                                WHERE id_producto = p.id_producto
-                            )
-                        )
-                    ), 
-                    JSON_ARRAY()
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'id_producto', p.id_producto,
+                        'codigo_OEM', p.codigo_OEM,
+                        'codigo_interno', p.codigo_interno,
+                        'codigo_fabricante', p.codigo_fabricante,
+                        'origen', p.origen,
+                        'marca_fabricante', p.marca_fabricante,
+                        'descripcion', p.descripcion,
+                        'multiplos', p.multiplos,
+                        'consultas', p.consultas,
+                        'medida', p.medida,
+                        'precio_compra', p.precio_compra,
+                        'precio_venta', p.precio_venta,
+                        'precio_minimo', p.precio_minimo
+                    )
                 ) AS productos
             FROM 
                 categoria c
-            LEFT JOIN 
+            LEFT JOIN
                 producto p ON c.id_categoria = p.id_categoria
-            LEFT JOIN 
-                aplicacion a ON p.id_producto = a.id_producto
-            LEFT JOIN 
-                modelo_auto mo ON a.id_modelo_auto = mo.id_modelo_auto
-            LEFT JOIN 
-                marca_auto ma ON mo.id_marca_auto = ma.id_marca_auto
             WHERE 
                 c.id_categoria = ?
             GROUP BY 
-                c.id_categoria, c.nombre_producto;
+                c.id_categoria;
         `;
 
         conexion.query(query, [idCategoria], (error, result) => {
@@ -938,7 +992,12 @@ function obtenerDatosCompletosPorIdAplicacion(idAplicacion) {
                 COALESCE(mo.nombre, '') AS nombre_modelo,
                 COALESCE(mo.anio_inicio_termino, '') AS anio_inicio_termino,
                 COALESCE(SUM(tp.stock), '') AS total_stock,
-                COALESCE(GROUP_CONCAT(DISTINCT CONCAT(t.razon_social, '(', tp.stock, ')') ORDER BY t.razon_social ASC), '') AS stock_por_tienda,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'razon_social', t.razon_social,
+                        'stock', tp.stock
+                    )
+                ) AS tiendas_con_stock,
                 COALESCE((SELECT JSON_ARRAYAGG(JSON_OBJECT('id_img_producto', ip.id_img_producto, 'img_url', ip.img_url)) FROM img_producto ip WHERE ip.id_producto = p.id_producto), JSON_ARRAY()) AS imagenes
             FROM 
                 aplicacion a
@@ -994,5 +1053,6 @@ module.exports = {
     actualizarStockTiendaProducto,
     crearRelacionTiendaProducto,
     getByIdImage,
-    obtenerDatosCompletosPorIdAplicacion
+    obtenerDatosCompletosPorIdAplicacion,
+    
 }
