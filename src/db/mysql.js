@@ -356,6 +356,7 @@ function obtenerProductosConDatosCompletosPorId(id) {
         c.campo_medicion,
         c.url_campo_medicion,
         c.tipo,
+        COALESCE((SELECT SUM(tp.stock) FROM tienda_producto tp WHERE tp.id_producto = p.id_producto), '') AS total_stock,
         COALESCE((
             SELECT 
                 JSON_ARRAYAGG(
