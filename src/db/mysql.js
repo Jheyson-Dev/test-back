@@ -380,7 +380,7 @@ function obtenerProductosConDatosCompletosPorId(id) {
         COALESCE((
             SELECT 
                 JSON_ARRAYAGG(
-                    JSON_OBJECT('id_tienda', t.id_tienda, 'ruc', t.ruc, 'razon_social', t.razon_social, 'direccion', t.direccion, 'encargado', t.encargado, 'celular', t.celular, 'stock', tp.stock)
+                    JSON_OBJECT('stock', tp.stock, 'id_tienda', t.id_tienda, 'razon_social', t.razon_social)
                 ) 
             FROM 
                 tienda_producto tp 
