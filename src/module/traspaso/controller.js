@@ -49,19 +49,11 @@ module.exports = function (dbInjected) {
             throw error;
         }
     }
-    function update(id, newData) {
-        return db.actualizar(tabla, id, newData);
-    }
-    function remove(id) {
-        return db.eliminar(tabla, id);
-    }
 
     return{
         getAll,
         getById,
-        add,
-        update,
-        remove
+        add
     }
     
 }
