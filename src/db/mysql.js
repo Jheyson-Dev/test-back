@@ -12,9 +12,6 @@ const dbconfig = {
   user: config.mysql.user,
   password: config.mysql.password,
   database: config.mysql.database,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
 };
 
 let conexion;
@@ -23,11 +20,10 @@ function conexionMysql() {
     return;
   }
 
-  // conexion = myqsl.createConnection(
-  //   "mysql://u1vatf1bbfkde6re:Wo9EFWQZHkFUo9GNbXRp@bbm5itocspzuztvcv4rg-mysql.services.clever-cloud.com:3306/bbm5itocspzuztvcv4rg"
-  // );
+  conexion = myqsl.createConnection(
+    "mysql://u1vatf1bbfkde6re:Wo9EFWQZHkFUo9GNbXRp@bbm5itocspzuztvcv4rg-mysql.services.clever-cloud.com:3306/bbm5itocspzuztvcv4rg"
+  );
 
-  const pool = myqsl.createPool(dbconfig);
   conexion.connect((err) => {
     if (err) {
       console.log("[db err]", err);
@@ -36,10 +32,6 @@ function conexionMysql() {
       console.log("DB conectada!!!");
     }
   });
-
-  setInterval(() => {
-    conexion.query("SELECT 1");
-  }, 5000);
 
   conexion.on("error", (err) => {
     console.log("[db err]", err);
